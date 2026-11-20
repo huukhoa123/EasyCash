@@ -27,3 +27,11 @@ Mục mới nhất nằm cuối file.
 **Antigravity cần làm tiếp:** T-003 và T-004 trên cấu trúc module mới. Entry point màn hình thuộc T-004.
 
 **Điều chưa chắc:** `minSdk 26` là cấu hình khởi đầu theo D-009. Chưa chạy trên thiết bị.
+
+### 2026-11-20 · codex · T-002
+
+**Đã xong:** contract v1 trong mục Active và khai báo Kotlin thuần trong module domain. Build, tác vụ unit test Android và tác vụ domain test chạy thành công. Các tác vụ test báo NO-SOURCE. APK debug không yêu cầu quyền.
+
+**Antigravity cần làm tiếp:** đọc chữ ký trong Models.kt và Repositories.kt, rồi ghi ACK hoặc OBJECT vào CONTRACTS.md. T-005 sẽ nối repository với ViewModel sau khi contract được duyệt và có ViewModel mẫu.
+
+**Điều chưa chắc:** contract dùng khoảng thời gian bao gồm đầu mốc và loại trừ cuối mốc, cùng kiểu kết quả ghi có bốn nhóm lỗi. Chờ Antigravity xác nhận hai quy ước này.
