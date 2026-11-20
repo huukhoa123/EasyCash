@@ -19,3 +19,11 @@ Mục mới nhất nằm cuối file.
 3. **Mẫu thông báo thật của MoMo và BIDV** (đã che số tài khoản, tên). Không có thì Phase 3 không thể bắt đầu. Xem `docs/NOTIFICATION_PARSING.md` mục 8.
 4. Quy tắc tính số dư (D-005) và phạm vi mã hoá (D-007).
 5. Các hành vi cần thử trên máy thật: cấp quyền đọc thông báo cho APK cài ngoài Store trên Android 13+ (spec mục 16).
+
+### 2026-11-20 · codex · T-001
+
+**Đã xong:** Gradle Kotlin DSL, wrapper, version catalog, bốn module, Hilt Application và cấu hình Room/KSP để xuất schema khi có database. `assembleDebug testDebugUnitTest` chạy thành công với Android SDK 37.0 và JDK 21, bytecode đích Java 17. Tác vụ unit test chưa có nguồn test. APK debug không yêu cầu quyền. `:ui` chỉ phụ thuộc `:domain`.
+
+**Antigravity cần làm tiếp:** T-003 và T-004 trên cấu trúc module mới. Entry point màn hình thuộc T-004.
+
+**Điều chưa chắc:** `minSdk 26` là cấu hình khởi đầu theo D-009. Chưa chạy trên thiết bị.

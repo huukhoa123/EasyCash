@@ -7,7 +7,7 @@ Nhận việc: đổi Owner/Status trước khi bắt đầu. Không nhận task
 
 | ID | Task | Owner | Status | Phụ thuộc | Tiêu chí xong (verify) |
 |----|------|-------|--------|-----------|------------------------|
-| T-001 | Khởi tạo project Gradle Kotlin DSL với 4 module `:app :ui :domain :data`, version catalog, Hilt, Room skeleton. Manifest **không** có `INTERNET`. | codex | TODO | — | `./gradlew assembleDebug` pass; `:ui` không phụ thuộc `:data` (kiểm tra trong `build.gradle.kts`) |
+| T-001 | Khởi tạo project Gradle Kotlin DSL với 4 module `:app :ui :domain :data`, version catalog, Hilt, Room skeleton. Manifest **không** có `INTERNET`. | codex | REVIEW | — | `./gradlew assembleDebug` pass; `:ui` không phụ thuộc `:data` (kiểm tra trong `build.gradle.kts`) |
 | T-002 | Chốt contract v1: model + repository interface trong `:domain`, cập nhật mục Active của `CONTRACTS.md` | codex | TODO | — | `CONTRACTS.md` khớp code; Antigravity ghi `ACK` |
 | T-003 | Design system: theme Material 3 Dark (mặc định) + Light theo token trong `docs/UI_UX.md`, typography, shapes, preview | antigravity | TODO | T-001 | Preview dark/light hiển thị đúng; không hard-code màu ngoài theme |
 | T-004 | Navigation Compose + Bottom Navigation 5 tab (Home, Transactions, Reports, Accounts, Settings) với màn hình placeholder | antigravity | TODO | T-001 | Chạy được, chuyển tab không mất trạng thái |
