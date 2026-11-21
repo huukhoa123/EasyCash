@@ -24,8 +24,8 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v6
-      - name: Install Android SDK
-        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
       - name: Build and test
         run: >-
           ./gradlew assembleDebug testDebugUnitTest :domain:test --no-daemon
