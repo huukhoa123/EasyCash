@@ -126,8 +126,8 @@ Thêm thì rẻ, đổi/xoá thì đắt. Ưu tiên thêm.
 
 ## 6. Git
 
-- Không commit thẳng `main`. Khoa merge.
-- Nhánh `codex/<task>` và `antigravity/<task>`. Một task = một nhánh = một PR nhỏ.
+- Theo yêu cầu Khoa ngày 2026-11-21, chỉ dùng nhánh `main`; commit và push trực tiếp lên nhánh này.
+- Không tạo nhánh phụ hoặc PR trừ khi Khoa yêu cầu. GitHub Actions chạy kiểm tra mỗi lần push `main`.
 - Commit nhỏ, message rõ: `feat(parser): …`, `feat(ui): …`, `fix(...)`.
 - Không force-push nhánh của agent kia. Xung đột ở vùng chung thì dừng và báo qua `HANDOFF.md`.
 - **Không commit keystore, mật khẩu ký, hay mẫu thông báo thật chưa che dữ liệu.**

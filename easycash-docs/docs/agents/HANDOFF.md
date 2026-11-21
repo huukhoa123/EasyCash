@@ -411,3 +411,9 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **GitHub:** main bắt buộc Verify debug pass, strict up-to-date và enforce admins, không force push/delete. Draft PR #1 chứa app hiện tại và CI, Khoa merge. Run 44922709889 success sau sửa thiếu sdkmanager và package tools lỗi thời.
 
 **Giới hạn artifact:** CI dùng debug keystore tạm của runner, khác khóa APK thử đã phát hành thủ công. Chưa tự động phát hành Release hoặc cấu hình khóa ký ổn định. APK CI phục vụ cài thử riêng, chưa bảo đảm cập nhật đè APK đang cài.
+
+### 2026-11-21 · codex · gom một nhánh main theo yêu cầu Khoa
+
+**Đã làm:** fast-forward toàn bộ app/CI về main và push. PR #1 được GitHub ghi nhận merged. Xoá các nhánh phụ local/remote sau khi kiểm tra đều là ancestor của main. Tag và APK Release vẫn giữ.
+
+**Quy trình mới:** chỉ main, push trực tiếp, CI vẫn chạy mỗi push. Gỡ required-status-check trước merge vì không còn dùng PR; vẫn chặn force push và xoá main. Cập nhật AGENTS.md để các agent sau không tạo lại nhánh phụ.
