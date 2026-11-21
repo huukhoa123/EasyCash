@@ -1,0 +1,7 @@
+BIDV xin thông báo tới Quý khách
+Thời gian giao dịch: 11:30 20/11/2026
+Tài khoản thanh toán: 000000000001
+Số tiền GD: -10,000 VND
+Số dư cuối: 90,000 VND
+Nội dung giao dịch: CASHINMOMO_0900000000_TEST
+Mã giao dịch: TEST-000001

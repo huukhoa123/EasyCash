@@ -8,7 +8,7 @@ Nếu tài liệu và code lệch nhau, xem quy trình đổi trong `AGENTS.md` 
 ### v1 · T-002
 
 - Codex: ACK.
-- Antigravity: chờ ACK.
+- Antigravity: ACK (2026-11-20). Đã xác nhận: TimeRange [start, end) nửa mở và WriteResult với 4 nhóm lỗi hoàn toàn phù hợp cho Compose UI và ViewModel.
 - Model, enum và kiểu lọc nằm trong [Models.kt](../../../domain/src/main/kotlin/com/easycash/domain/Models.kt). Chữ ký của cả sáu repository và `WriteResult` nằm trong [Repositories.kt](../../../domain/src/main/kotlin/com/easycash/domain/Repositories.kt).
 - Tiền là `Long` theo đơn vị đồng VND. `amount > 0` với mọi loại giao dịch trừ `ADJUSTMENT`, có thể âm và phải khác 0. `estimatedBalance` là số dư ước tính.
 - Thời gian dùng epoch milliseconds UTC. UI định dạng theo múi giờ máy. `TimeRange` bao gồm đầu mốc và loại trừ cuối mốc. Tháng của ngân sách dùng `yyyyMM`.
