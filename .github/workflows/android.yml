@@ -26,6 +26,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
       - name: Build and test
         run: >-
           ./gradlew assembleDebug testDebugUnitTest :domain:test --no-daemon
