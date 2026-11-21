@@ -44,3 +44,8 @@ Các phase sau: theo spec mục 15.
 | T-015 | NotificationListenerService + lọc OTP + dedup_key + dispatch sự kiện vào DB | codex | REVIEW | Test huỷ OTP, không lưu/log nhạy cảm, chặn trùng lặp |
 | T-016 | UI Hàng chờ xem lại (Review Queue) & Lọc giao dịch tự động trên Home & Transactions | antigravity | DONE | Filter chip Chờ xem lại, nút Xác nhận/Từ chối, cập nhật số dư D-005 |
 | T-017 | UI Quản lý nguồn thông báo & Onboarding cấp quyền Android 13+ | antigravity | DONE | Onboarding banner trên Home, hướng dẫn chi tiết 2 bước trong Settings |
+## GitHub CI
+
+| ID | Task | Owner | Status | Verify |
+|---|---|---|---|---|
+| T-018 | Android GitHub Actions, APK/test artifacts và required check main | codex | REVIEW | GitHub run pass, required Verify debug |

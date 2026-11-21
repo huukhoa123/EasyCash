@@ -403,3 +403,11 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **Riêng tư:** đã thay số điện thoại và mã tham chiếu thật còn sót trong bàn giao cũ bằng giá trị giả trước khi push. Không đưa local.properties, keystore, heap dump hoặc cache vào commit.
 
 **Giới hạn:** debug listener chỉ có BIDV. Push thực tế và Android 13+ chưa nghiệm thu, MoMo chưa có parser. Ngân sách UI còn dùng fake. Không coi bản thử này là phát hành production.
+
+### 2026-11-21 · codex · GitHub CI T-018
+
+**Đã làm:** .github/workflows/android.yml chạy push/pull_request/workflow_dispatch. Java 21, setup Android SDK/Gradle, wrapper validation, assembleDebug/testDebugUnitTest/domain:test. Kiểm tra merged manifest không INTERNET và ui không phụ thuộc data. Test reports luôn upload, APK chỉ upload sau pass, retention 14 ngày.
+
+**GitHub:** main bắt buộc Verify debug pass, strict up-to-date và enforce admins, không force push/delete. Draft PR #1 chứa app hiện tại và CI, Khoa merge. Run 44922709889 success sau sửa thiếu sdkmanager và package tools lỗi thời.
+
+**Giới hạn artifact:** CI dùng debug keystore tạm của runner, khác khóa APK thử đã phát hành thủ công. Chưa tự động phát hành Release hoặc cấu hình khóa ký ổn định. APK CI phục vụ cài thử riêng, chưa bảo đảm cập nhật đè APK đang cài.
