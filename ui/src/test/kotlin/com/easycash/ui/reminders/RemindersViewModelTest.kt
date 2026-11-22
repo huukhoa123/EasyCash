@@ -72,6 +72,7 @@ class RemindersViewModelTest {
         assertTrue(item.isDueSoon)
         assertEquals(1, state.activeCount)
         assertEquals(3_000_000L, state.totalMonthlyEstimatedAmount)
+        assertFalse(state.isTotalAmountOverflow)
     }
 
     @Test
@@ -188,6 +189,61 @@ class RemindersViewModelTest {
         assertTrue(deleted)
         val list = reminderRepo.observeAll().first()
         assertTrue(list.isEmpty())
+    }
+
+    @Test
+    fun `large weekly amount exceeding Long MAX_VALUE divided by 4 triggers overflow safely without wrap around`() = runTest {
+        val largeWeeklyAmount = Long.MAX_VALUE / 4 + 100L
+        val rem = Reminder(
+            id = 0L,
+            name = "Khoản đầu tư lớn",
+            accountId = 1L,
+            categoryId = null,
+            type = CategoryType.EXPENSE,
+            amount = largeWeeklyAmount,
+            frequency = ReminderFrequency.WEEKLY,
+            dayRule = 1,
+            nextDueAtMillis = System.currentTimeMillis() + 86400000L,
+            remindBeforeDays = 1,
+            isActive = true,
+        )
+        reminderRepo.upsert(rem)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.first { it is RemindersUiState.Success } as RemindersUiState.Success
+        assertTrue(state.isTotalAmountOverflow)
+        assertNull(state.totalMonthlyEstimatedAmount)
+        // Verify original amount was not modified or clamped
+        assertEquals(largeWeeklyAmount, state.reminders.single().reminder.amount)
+    }
+
+    @Test
+    fun `multiple large monthly amounts trigger overflow safely`() = runTest {
+        val halfMax = Long.MAX_VALUE / 2 + 100L
+        val rem1 = Reminder(
+            id = 1L,
+            name = "Khoản 1",
+            accountId = 1L,
+            categoryId = null,
+            type = CategoryType.EXPENSE,
+            amount = halfMax,
+            frequency = ReminderFrequency.MONTHLY,
+            dayRule = 1,
+            nextDueAtMillis = System.currentTimeMillis() + 86400000L,
+            remindBeforeDays = 1,
+            isActive = true,
+        )
+        val rem2 = rem1.copy(id = 2L, name = "Khoản 2")
+        reminderRepo.upsert(rem1)
+        reminderRepo.upsert(rem2)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.first { it is RemindersUiState.Success } as RemindersUiState.Success
+        assertTrue(state.isTotalAmountOverflow)
+        assertNull(state.totalMonthlyEstimatedAmount)
+        assertEquals(2, state.reminders.size)
+        assertEquals(halfMax, state.reminders[0].reminder.amount)
+        assertEquals(halfMax, state.reminders[1].reminder.amount)
     }
 
     @Test

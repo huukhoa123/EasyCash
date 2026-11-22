@@ -5,7 +5,7 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 object CurrencyUtils {
-    private val symbols = DecimalFormatSymbols(Locale("vi", "VN")).apply {
+    private val symbols = DecimalFormatSymbols(Locale.forLanguageTag("vi-VN")).apply {
         groupingSeparator = '.'
     }
     private val formatter = DecimalFormat("#,###", symbols)

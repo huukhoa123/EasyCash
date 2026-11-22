@@ -6,6 +6,7 @@ import com.easycash.domain.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigInteger
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
@@ -25,7 +26,8 @@ sealed interface RemindersUiState {
         val accounts: List<Account>,
         val categories: List<Category>,
         val activeCount: Int,
-        val totalMonthlyEstimatedAmount: Long,
+        val totalMonthlyEstimatedAmount: Long?,
+        val isTotalAmountOverflow: Boolean = false,
     ) : RemindersUiState
 }
 
@@ -71,22 +73,31 @@ class RemindersViewModel @Inject constructor(
         }
 
         val activeCount = reminders.count { it.isActive }
-        val totalMonthlyEstimatedAmount = reminders.filter { it.isActive && it.type == CategoryType.EXPENSE && it.amount != null }
-            .sumOf { rem ->
-                val amt = rem.amount ?: 0L
-                when (rem.frequency) {
-                    ReminderFrequency.WEEKLY -> amt * 4
-                    ReminderFrequency.MONTHLY -> amt
-                    ReminderFrequency.YEARLY -> amt / 12
-                }
+        val maxLongBig = BigInteger.valueOf(Long.MAX_VALUE)
+        var totalBig = BigInteger.ZERO
+
+        for (rem in reminders) {
+            val amount = rem.amount
+            if (!rem.isActive || rem.type != CategoryType.EXPENSE || amount == null) continue
+            val amtBig = BigInteger.valueOf(amount)
+            val monthlyBig = when (rem.frequency) {
+                ReminderFrequency.WEEKLY -> amtBig.multiply(BigInteger.valueOf(4))
+                ReminderFrequency.MONTHLY -> amtBig
+                ReminderFrequency.YEARLY -> amtBig.divide(BigInteger.valueOf(12))
             }
+            totalBig = totalBig.add(monthlyBig)
+        }
+
+        val isOverflow = totalBig > maxLongBig
+        val totalAmount = if (isOverflow) null else totalBig.toLong()
 
         RemindersUiState.Success(
             reminders = uiModels,
             accounts = accounts.filter { !it.isArchived },
             categories = categories,
             activeCount = activeCount,
-            totalMonthlyEstimatedAmount = totalMonthlyEstimatedAmount,
+            totalMonthlyEstimatedAmount = totalAmount,
+            isTotalAmountOverflow = isOverflow,
         )
     }.stateIn(
         scope = viewModelScope,

@@ -23,6 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.easycash.domain.*
 import com.easycash.ui.components.*
@@ -85,6 +88,7 @@ fun RemindersScreen(
                 categories = listOf(Category(1L, "Hoá đơn", CategoryType.EXPENSE, "bill", "blue", true)),
                 activeCount = 2,
                 totalMonthlyEstimatedAmount = 3_760_000L,
+                isTotalAmountOverflow = false,
             ),
             onToggleActive = { _, _ -> },
             onAddClick = { showAddEditDialog = true },
@@ -189,6 +193,23 @@ fun RemindersContent(
         )
     }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasNotificationPermission = if (Build.VERSION.SDK_INT >= 33) {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                } else {
+                    true
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         hasNotificationPermission = isGranted
     }
@@ -266,8 +287,12 @@ fun RemindersContent(
                         }
                     }
                     Spacer(Modifier.height(8.dp))
+                    val monthlyDisplay = when {
+                        state.isTotalAmountOverflow || state.totalMonthlyEstimatedAmount == null -> "Vượt giới hạn hiển thị"
+                        else -> CurrencyUtils.formatVnd(state.totalMonthlyEstimatedAmount)
+                    }
                     Text(
-                        text = "${CurrencyUtils.formatVnd(state.totalMonthlyEstimatedAmount)} / tháng",
+                        text = "$monthlyDisplay / tháng",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,

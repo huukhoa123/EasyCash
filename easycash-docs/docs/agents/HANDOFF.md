@@ -638,3 +638,29 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **Sửa backend:** archive tài khoản hoặc update isArchived=true đồng thời tắt các khoản nhắc liên kết trong cùng transaction. Trước đó worker loại tài khoản archived khỏi lịch nhưng UI vẫn có thể báo khoản nhắc đang bật. Khi mở lại tài khoản, khoản nhắc vẫn tắt cho tới khi người dùng bật lại.
 
 **Kiểm chứng:** test FinancialAlertEngineTest xác nhận archive tắt khoản nhắc và không tạo giao dịch. assembleDebug/assembleRelease/testDebugUnitTest pass, 19 backend tests pass. CI của bản P-003 trước (44995992196) success.
+
+### 2026-11-22 · antigravity · giải quyết hoàn tất phản hồi review của Codex
+
+**Đã sửa (Frontend):**
+1. **Phép tính tổng tiền an toàn & xử lý tràn số (`RemindersViewModel.kt`):**
+   - Chuyển toàn bộ phép tính `totalMonthlyEstimatedAmount` sang `BigInteger`, tránh triệt để wrap-around khi cộng dồn hoặc nhân 4 với khoản tuần (`WEEKLY`).
+   - Nếu tổng vượt quá `Long.MAX_VALUE`, đặt cờ `isTotalAmountOverflow = true` và `totalMonthlyEstimatedAmount = null`. Giá trị gốc của từng khoản nhắc được bảo toàn nguyên vẹn (không clamp, không làm sai lệch dữ liệu).
+   - Thêm 2 regression tests trong `RemindersViewModelTest.kt` kiểm chứng trường hợp tràn số với khoản tuần cực lớn và nhiều khoản tháng cực lớn.
+2. **Đồng bộ quyền thông báo theo vòng đời (`RemindersScreen.kt`):**
+   - Sử dụng `DisposableEffect(lifecycleOwner)` lắng nghe `Lifecycle.Event.ON_RESUME` để tự động tái kiểm tra `POST_NOTIFICATIONS` khi người dùng cấp/hủy quyền ở Cài đặt hệ thống rồi quay lại app.
+   - Hiển thị nhãn `"Vượt giới hạn hiển thị / tháng"` thanh lịch khi xảy ra tràn số mà không gây crash giao diện.
+3. **Deprecation fix (`CurrencyUtils.kt`):**
+   - Đổi `Locale("vi", "VN")` sang `Locale.forLanguageTag("vi-VN")`.
+
+**Kiểm chứng:**
+- `.\gradlew testDebugUnitTest`: BUILD SUCCESSFUL (100% tests pass).
+- `.\gradlew assembleDebug`: BUILD SUCCESSFUL.
+- Đã cài đặt và kiểm tra trực quan trên Android Emulator (API 28). UI hiển thị ổn định, mượt mà.
+
+### 2026-11-22 · codex · nghiệm thu bản sửa UI trước phát hành
+
+**Đã nhận:** bản sửa tràn tổng tiền và cập nhật quyền khi resume của Antigravity. Review xác nhận BigInteger giữ nguyên số tiền từng khoản và hiển thị trạng thái vượt giới hạn; không sửa vùng UI của Antigravity.
+
+**Kiểm chứng:** assembleDebug, assembleRelease, testDebugUnitTest và :domain:test thành công. RemindersViewModelTest có 8 test, 0 lỗi; manifest debug không có INTERNET. Bản sửa chuẩn bị push main.
+
+**Chuẩn bị phát hành:** thêm docs/RELEASE_CHECKLIST.md với quy trình giữ dữ liệu bản thử và kiểm tra máy thật. Chưa ký/phát hành stable; vẫn cần nghiệm thu Android13+, push BIDV/MoMo thật và chuyển dữ liệu trên điện thoại.
