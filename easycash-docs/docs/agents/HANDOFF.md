@@ -710,3 +710,13 @@ Thêm NotificationOutcome nội bộ data và thông báo Android chẩn đoán 
 Build debug/release/testDebugUnitTest pass, 25 backend tests pass. APK versionCode4/1.0.0-rc.3, chữ ký giữ như rc.1/rc.2. Hướng dẫn RELEASE_1.0.0_RC3.md. Chưa nghiệm thu trên điện thoại, không khẳng định đã giải quyết nguyên nhân duy nhất. Khoa giữ thông báo BIDV, cài đè đúng APK và bật lại quyền đọc, gửi trạng thái chẩn đoán nếu còn lỗi. Không cần chuyển tiền mới.
 
 rc.3 đã công khai: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.3, source 5499236, CI 45042427895 success. Bốn asset digest đã đối chiếu. Chờ trạng thái chẩn đoán từ điện thoại Khoa; không có kết nối USB và chưa xác nhận lỗi thực tế đã hết.
+
+### 2026-11-22 · codex · Khoa xác nhận đọc thông báo, tạo logo
+
+Khoa xác nhận app đã đọc thông báo trên máy. Chưa coi là nghiệm thu toàn bộ thu/chi/ngân sách/MoMo/Android. Theo yêu cầu tạo hình app, đã tạo logo raster assets/branding/easycash-logo-v1.png bằng imagegen: ví kết hợp chữ e, xanh ngọc/kem. Chưa gắn launcher icon hoặc phát hành APK mới. Antigravity có thể dùng asset này để tích hợp launcher icon thích ứng, cần kiểm tra crop/thu nhỏ trước khi build.
+
+### 2026-11-22 · codex · gắn logo vào APK theo yêu cầu Khoa
+
+Tích hợp logo đã tạo vào app launcher: adaptive API26+ với inset8dp chống crop, icon density48/72/96/144/192px và foreground432px. Manifest icon/roundIcon trỏ mipmap. Không sửa UI/MainActivity. VersionCode5/1.0.0-rc.4, giữ appId/khóa ký/schema để cài đè.
+
+Build assembleDebug/assembleRelease/testDebugUnitTest pass; build lại sau inset pass. apksigner xác minh cùng chứng chỉ bridge/release cũ. Đã xem icon192px, aapt xác nhận icon được đóng gói. Chưa xem trên launcher điện thoại thực tế. Giữ nguyên chức năng BIDV/chẩn đoán rc.3, Khoa đã xác nhận đọc thông báo. Release notes RELEASE_1.0.0_RC4.md.
