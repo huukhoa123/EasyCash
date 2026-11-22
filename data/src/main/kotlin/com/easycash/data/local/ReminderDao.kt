@@ -23,6 +23,9 @@ interface ReminderDao {
     @Query("DELETE FROM recurring_transactions WHERE id = :id")
     suspend fun delete(id: Long): Int
 
+    @Query("UPDATE recurring_transactions SET is_active = 0, updated_at = :now WHERE account_id = :accountId")
+    suspend fun deactivateForAccount(accountId: Long, now: Long)
+
     @Query("SELECT COUNT(*) FROM alert_receipts WHERE \u0060key\u0060 = :key")
     suspend fun receiptCount(key: String): Int
 

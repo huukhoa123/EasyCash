@@ -632,3 +632,9 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **Frontend cần xử lý:** RemindersViewModel.kt tính totalMonthlyEstimatedAmount bằng amt*4 và sumOf Long. Với amount=Long.MAX_VALUE/4+1 cho WEEKLY hoặc tổng nhiều khoản MONTHLY lớn, số hiển thị bị wrap thành âm. Cần phép tính an toàn và trạng thái vượt giới hạn hiển thị, không âm thầm clamp hoặc đổi giá trị khoản nhắc; thêm test hồi quy. Quyền POST_NOTIFICATIONS hiện chỉ remember ban đầu, nên cập nhật lại khi app resume sau khi người dùng thay đổi quyền ngoài app.
 
 **Còn nghiệm thu:** Android13+ trên máy thật, push ngân hàng/MoMo, ký release và hướng dẫn chuyển dữ liệu. Luồng nhắc backend không tự tạo transaction/thanh toán.
+
+### 2026-11-22 · codex · đồng bộ archive tài khoản với khoản nhắc
+
+**Sửa backend:** archive tài khoản hoặc update isArchived=true đồng thời tắt các khoản nhắc liên kết trong cùng transaction. Trước đó worker loại tài khoản archived khỏi lịch nhưng UI vẫn có thể báo khoản nhắc đang bật. Khi mở lại tài khoản, khoản nhắc vẫn tắt cho tới khi người dùng bật lại.
+
+**Kiểm chứng:** test FinancialAlertEngineTest xác nhận archive tắt khoản nhắc và không tạo giao dịch. assembleDebug/assembleRelease/testDebugUnitTest pass, 19 backend tests pass. CI của bản P-003 trước (44995992196) success.

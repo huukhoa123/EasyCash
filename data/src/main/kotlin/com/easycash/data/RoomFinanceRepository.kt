@@ -53,12 +53,15 @@ class RoomFinanceRepository(private val database: EasyCashDatabase) : AccountRep
         if (!account.isArchived && dao.nameCount(account.name.trim(), account.id) > 0) return@write WriteResult.Failure.CONFLICT
         dao.updateAccount(existing.copy(name = account.name.trim(), type = account.type.name,
             initialBalance = account.initialBalance, isArchived = account.isArchived, updatedAt = System.currentTimeMillis()))
+        if (account.isArchived) database.reminderDao().deactivateForAccount(account.id, System.currentTimeMillis())
         WriteResult.Success(Unit)
     }
 
     override suspend fun archive(id: Long): WriteResult<Unit> = write {
         val existing = dao.account(id) ?: return@write WriteResult.Failure.NOT_FOUND
-        dao.updateAccount(existing.copy(isArchived = true, updatedAt = System.currentTimeMillis()))
+        val now = System.currentTimeMillis()
+        dao.updateAccount(existing.copy(isArchived = true, updatedAt = now))
+        database.reminderDao().deactivateForAccount(id, now)
         WriteResult.Success(Unit)
     }
 

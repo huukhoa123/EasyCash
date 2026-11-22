@@ -74,6 +74,8 @@ class FinancialAlertEngineTest {
             assertEquals(Instant.parse("2026-03-31T09:00:00Z").toEpochMilli(), engine.nextOccurrence(february, february.nextDueAt, zone))
             assertTrue(finance.observe(TransactionFilter()).first().isEmpty())
             assertEquals(1000L, finance.observeAll().first().single().estimatedBalance)
+            finance.archive(account)
+            assertFalse(reminders.observeAll().first().single().isActive)
         } finally { db.close() }
     }
 }
