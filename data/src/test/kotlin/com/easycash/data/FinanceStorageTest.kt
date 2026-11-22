@@ -16,10 +16,42 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.json.JSONObject
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], manifest = Config.NONE)
 class FinanceStorageTest {
+    @Test
+    fun `migration from original trial schema preserves transactions and balances`() = runBlocking {
+        val context = RuntimeEnvironment.getApplication()
+        val name = "original-trial-migration.db"
+        context.deleteDatabase(name)
+        try {
+            val schema = JSONObject(java.io.File(System.getProperty("easycash.schemaRoot"), "com.easycash.data.local.EasyCashDatabase/4.json").readText())
+                .getJSONObject("database").getJSONArray("entities")
+            context.openOrCreateDatabase(name, 0, null).use { old ->
+                for (index in 0 until schema.length()) {
+                    val entity = schema.getJSONObject(index)
+                    val table = entity.getString("tableName")
+                    old.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+                    val indices = entity.optJSONArray("indices") ?: org.json.JSONArray()
+                    for (position in 0 until indices.length()) old.execSQL(indices.getJSONObject(position).getString("createSql").replace("\${TABLE_NAME}", table))
+                }
+                old.execSQL("INSERT INTO accounts (id, name, type, initial_balance, is_archived, created_at, updated_at) VALUES (1, 'Legacy cash', 'CASH', 1000, 0, 1, 1)")
+                old.execSQL("INSERT INTO transactions (id, account_id, type, amount, note, occurred_at, status, origin, created_at, updated_at) VALUES (1, 1, 'EXPENSE', 200, 'Legacy purchase', 1, 'USER_CONFIRMED', 'MANUAL', 1, 1)")
+                old.version = 4
+            }
+            val db = Room.databaseBuilder(context, EasyCashDatabase::class.java, name).addMigrations(MIGRATION_4_5, MIGRATION_5_6).build()
+            try {
+                val repository = RoomFinanceRepository(db)
+                assertEquals(800L, repository.observeAll().first().single().estimatedBalance)
+                assertEquals("Legacy purchase", repository.observe(TransactionFilter()).first().single().note)
+                assertTrue(db.budgetDao().observe(202611).first().isEmpty())
+                assertTrue(db.reminderDao().observeAll().first().isEmpty())
+            } finally { db.close() }
+        } finally { context.deleteDatabase(name) }
+    }
+
     @Test
     fun `balances respect status transfers refunds and updates`() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()

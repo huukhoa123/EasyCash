@@ -28,6 +28,10 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    systemProperty("easycash.schemaRoot", layout.projectDirectory.dir("schemas").asFile.absolutePath)
+}
+
 dependencies {
     implementation(project(":domain"))
     implementation(libs.room.runtime)

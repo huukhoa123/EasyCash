@@ -583,3 +583,11 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **Antigravity cần làm:** đọc/ACK P-003 trước khi Codex thêm domain ReminderRepository binding. Frontend màn nhắc định kỳ và xin quyền POST_NOTIFICATIONS khi người dùng chủ động bật; đây là quyền khác quyền đọc thông báo ngân hàng. Chưa có UI CRUD reminder, nên không coi tính năng end-to-end đã hoàn tất. Backend chỉ có storage/engine cho tới ACK.
 
 **Phát hành:** source hợp nhất chuẩn bị push main, chưa tạo stable release. Còn UI nhắc/permission, nghiệm thu push thật/MoMo/Android13+ và ký release/chuyển dữ liệu.
+
+### 2026-11-22 · codex · bảo vệ cập nhật từ APK thử
+
+**Đã xác minh:** chứng chỉ SHA-256 của APK thử v0.1.0-test-20261121 trên GitHub trùng APK debug local mới. Có thể cập nhật cùng khóa để đưa chức năng backup vào bản thử trước khi đổi khóa release.
+
+**Test bổ sung:** tạo DB từ schema JSON v4 thực sự đã lưu, chèn tài khoản/giao dịch cũ rồi mở qua migration v4-v5-v6. Số dư 1000-200=800 và ghi chú cũ được giữ nguyên, các bảng mới rỗng đúng. 19 test backend pass. CI run 44992743624 của bản tích hợp đã success.
+
+**Giới hạn:** đây là kiểm chứng schema/certificate và emulator, chưa thay thế kiểm tra dữ liệu trên điện thoại của Khoa. Chưa phát hành stable v1.
