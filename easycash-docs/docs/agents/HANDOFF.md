@@ -720,3 +720,5 @@ Khoa xác nhận app đã đọc thông báo trên máy. Chưa coi là nghiệm 
 Tích hợp logo đã tạo vào app launcher: adaptive API26+ với inset8dp chống crop, icon density48/72/96/144/192px và foreground432px. Manifest icon/roundIcon trỏ mipmap. Không sửa UI/MainActivity. VersionCode5/1.0.0-rc.4, giữ appId/khóa ký/schema để cài đè.
 
 Build assembleDebug/assembleRelease/testDebugUnitTest pass; build lại sau inset pass. apksigner xác minh cùng chứng chỉ bridge/release cũ. Đã xem icon192px, aapt xác nhận icon được đóng gói. Chưa xem trên launcher điện thoại thực tế. Giữ nguyên chức năng BIDV/chẩn đoán rc.3, Khoa đã xác nhận đọc thông báo. Release notes RELEASE_1.0.0_RC4.md.
+
+rc.4 đã công khai: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.4, source 66c9cc1, CI 45044352790 success. Bốn asset digest khớp. Khoa cài đè cùng dòng APK để giữ dữ liệu; chưa kiểm tra icon trên launcher điện thoại thực tế.
