@@ -10,6 +10,7 @@ import com.easycash.domain.Category
 import com.easycash.domain.CategoryRepository
 import com.easycash.domain.CategorySpending
 import com.easycash.domain.CategoryType
+import com.easycash.domain.DataManagementRepository
 import com.easycash.domain.NotificationSource
 import com.easycash.domain.NotificationSourceRepository
 import com.easycash.domain.StatsRepository
@@ -337,4 +338,16 @@ class FakeBudgetRepository(
         budgets.value = budgets.value.filter { it.id != id }
         return WriteResult.Success(Unit)
     }
+}
+
+class FakeDataManagementRepository : DataManagementRepository {
+    var exportResult: WriteResult<ByteArray> = WriteResult.Success(byteArrayOf(1, 2, 3))
+    var restoreResult: WriteResult<Unit> = WriteResult.Success(Unit)
+    var csvResult: WriteResult<String> = WriteResult.Success("id,account_id\n1,1")
+    var clearResult: WriteResult<Unit> = WriteResult.Success(Unit)
+
+    override suspend fun exportBackup(password: CharArray): WriteResult<ByteArray> = exportResult
+    override suspend fun restoreBackup(bytes: ByteArray, password: CharArray): WriteResult<Unit> = restoreResult
+    override suspend fun exportCsv(): WriteResult<String> = csvResult
+    override suspend fun clearAll(): WriteResult<Unit> = clearResult
 }

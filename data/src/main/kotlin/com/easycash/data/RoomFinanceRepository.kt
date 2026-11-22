@@ -11,6 +11,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.math.BigInteger
 
+private val MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE)
+private val MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE)
+
+private fun BigInteger.toLongExactCompat(): Long {
+    if (this < MIN_LONG || this > MAX_LONG) {
+        throw ArithmeticException("BigInteger out of long range: $this")
+    }
+    return this.toLong()
+}
+
 class RoomFinanceRepository(private val database: EasyCashDatabase) : AccountRepository, TransactionRepository, StatsRepository {
     private val dao = database.financeDao()
 
@@ -25,7 +35,7 @@ class RoomFinanceRepository(private val database: EasyCashDatabase) : AccountRep
                     else -> total + amount
                 }
             }
-            Account(account.id, account.name, AccountType.valueOf(account.type), account.initialBalance, balance.longValueExact(), account.isArchived)
+            Account(account.id, account.name, AccountType.valueOf(account.type), account.initialBalance, balance.toLongExactCompat(), account.isArchived)
         }
     }
 
@@ -154,10 +164,11 @@ class RoomFinanceRepository(private val database: EasyCashDatabase) : AccountRep
         WriteResult.Failure.STORAGE_ERROR
     }
 
-    private suspend fun verifyMoneyRange() {
+    internal suspend fun verifyMoneyRange() {
         val transactions = dao.transactions().filter { counted(it) }
+        var totalVisibleBalance = BigInteger.ZERO
         for (account in dao.accounts()) {
-            transactions.fold(BigInteger.valueOf(account.initialBalance)) { total, row ->
+            val balance = transactions.fold(BigInteger.valueOf(account.initialBalance)) { total, row ->
                 val amount = BigInteger.valueOf(row.amount)
                 when {
                     row.type == "TRANSFER" && row.toAccountId == account.id -> total + amount
@@ -165,8 +176,11 @@ class RoomFinanceRepository(private val database: EasyCashDatabase) : AccountRep
                     row.type == "EXPENSE" || row.type == "TRANSFER" -> total - amount
                     else -> total + amount
                 }
-            }.longValueExact()
+            }
+            balance.toLongExactCompat()
+            if (!account.isArchived) totalVisibleBalance += balance
         }
+        totalVisibleBalance.toLongExactCompat()
         for (type in listOf("INCOME", "EXPENSE")) {
             transactions.filter { it.type == type }.fold(0L) { total, row -> Math.addExact(total, row.amount) }
         }

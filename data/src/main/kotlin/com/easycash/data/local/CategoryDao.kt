@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
+    @Query("SELECT (SELECT COUNT(*) FROM transactions WHERE category_id = :id) + (SELECT COUNT(*) FROM budgets WHERE category_id = :id) + (SELECT COUNT(*) FROM recurring_transactions WHERE category_id = :id)")
+    suspend fun referenceCount(id: Long): Int
+
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun findById(id: Long): CategoryEntity?
 

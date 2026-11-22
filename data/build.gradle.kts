@@ -31,6 +31,7 @@ room {
 dependencies {
     implementation(project(":domain"))
     implementation(libs.room.runtime)
+    implementation(libs.work.runtime)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     ksp(libs.room.compiler)

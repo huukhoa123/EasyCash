@@ -37,6 +37,7 @@ class RoomCategoryRepository(private val database: EasyCashDatabase) : CategoryR
         return write {
             val existing = dao.findById(category.id) ?: return@write WriteResult.Failure.NOT_FOUND
             if (existing.isSystem != category.isSystem) return@write WriteResult.Failure.INVALID_INPUT
+            if (existing.type != category.type.name && dao.referenceCount(category.id) > 0) return@write WriteResult.Failure.CONFLICT
             dao.update(existing.copy(
                 name = category.name.trim(), type = category.type.name,
                 iconKey = category.iconKey, colorKey = category.colorKey,

@@ -4,4 +4,9 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class EasyCashApplication : Application()
+class EasyCashApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        com.easycash.data.notification.scheduleFinancialAlerts(this)
+    }
+}

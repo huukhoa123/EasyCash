@@ -5,6 +5,8 @@ import com.easycash.data.local.EasyCashDatabase
 import com.easycash.data.local.MIGRATION_1_2
 import com.easycash.data.local.MIGRATION_2_3
 import com.easycash.data.local.MIGRATION_3_4
+import com.easycash.data.local.MIGRATION_4_5
+import com.easycash.data.local.MIGRATION_5_6
 import com.easycash.domain.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -52,6 +54,8 @@ class FinanceStorageTest {
                 accountId = huge, toAccountId = null, type = TransactionType.INCOME, amount = 1,
             )))
             assertEquals(Long.MAX_VALUE, repository.observeAll().first().last().estimatedBalance)
+            assertEquals(WriteResult.Failure.INVALID_INPUT, repository.add(Account(0, "Vượt tổng", AccountType.CASH, 1, 1, false)))
+            assertEquals(2, repository.observeAll().first().size)
         } finally {
             db.close()
         }
@@ -69,7 +73,7 @@ class FinanceStorageTest {
                 old.execSQL("INSERT INTO categories VALUES (1, 'Giữ lại', 'EXPENSE', 'food', 'expense', 0, 0, 0, 1, 1)")
                 old.version = 1
             }
-            val db = Room.databaseBuilder(context, EasyCashDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+            val db = Room.databaseBuilder(context, EasyCashDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
             try {
                 assertEquals("Giữ lại", db.categoryDao().findById(1)?.name)
                 assertTrue(RoomFinanceRepository(db).observeAll().first().isEmpty())

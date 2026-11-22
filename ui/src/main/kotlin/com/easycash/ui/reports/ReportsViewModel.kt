@@ -2,6 +2,7 @@ package com.easycash.ui.reports
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.easycash.domain.WriteResult
 import com.easycash.domain.Budget
 import com.easycash.domain.BudgetRepository
 import com.easycash.domain.Category
@@ -141,10 +142,15 @@ class ReportsViewModel @Inject constructor(
         initialValue = ReportsUiState.Loading,
     )
 
-    fun setBudget(categoryId: Long, limitAmount: Long, warnThresholdPercent: Int = 80) {
+    private val _writeError = MutableStateFlow<String?>(null)
+    val writeError = _writeError.asStateFlow()
+
+    fun dismissWriteError() { _writeError.value = null }
+
+    fun setBudget(categoryId: Long, limitAmount: Long, warnThresholdPercent: Int = 80, onSuccess: () -> Unit = {}) {
         if (limitAmount <= 0L) return
         viewModelScope.launch {
-            budgetRepository.upsert(
+            val result = budgetRepository.upsert(
                 Budget(
                     id = 0L,
                     categoryId = categoryId,
@@ -153,12 +159,15 @@ class ReportsViewModel @Inject constructor(
                     warnThresholdPercent = warnThresholdPercent,
                 )
             )
+            _writeError.value = if (result is WriteResult.Failure) "Không thể lưu ngân sách. Kiểm tra danh mục và hạn mức rồi thử lại." else null
+            if (result is WriteResult.Success) onSuccess()
         }
     }
 
     fun deleteBudget(budgetId: Long) {
         viewModelScope.launch {
-            budgetRepository.delete(budgetId)
+            val result = budgetRepository.delete(budgetId)
+            _writeError.value = if (result is WriteResult.Failure) "Không thể xóa ngân sách. Vui lòng thử lại." else null
         }
     }
 

@@ -16,6 +16,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import com.easycash.ui.components.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -79,6 +89,15 @@ fun ReportsScreen(
             modifier = modifier,
         )
     } else {
+        val writeError by viewModel.writeError.collectAsStateWithLifecycle()
+        if (writeError != null) {
+            AlertDialog(
+                onDismissRequest = viewModel::dismissWriteError,
+                title = { Text("Chưa lưu được thay đổi") },
+                text = { Text(writeError.orEmpty()) },
+                confirmButton = { TextButton(onClick = viewModel::dismissWriteError) { Text("Đã hiểu") } },
+            )
+        }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         ReportsContent(
             uiState = uiState,
@@ -94,8 +113,7 @@ fun ReportsScreen(
                 categories = success.expenseCategories,
                 onDismiss = { showSetBudgetDialog = false },
                 onConfirm = { catId, limit ->
-                    viewModel.setBudget(catId, limit)
-                    showSetBudgetDialog = false
+                    viewModel.setBudget(catId, limit, onSuccess = { showSetBudgetDialog = false })
                 },
             )
         }
@@ -110,209 +128,100 @@ fun ReportsContent(
     onDeleteBudget: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    when (uiState) {
-        is ReportsUiState.Loading -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    if (uiState is ReportsUiState.Loading) {
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        return
+    }
+    val state = uiState as ReportsUiState.Success
+    LazyColumn(modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        item { ScreenHeader("Báo cáo", "Dòng tiền và hạn mức chi tiêu.") }
+        item {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ReportPeriod.entries.forEach { period ->
+                    FilterChip(selected = state.selectedPeriod == period, onClick = { onSelectPeriod(period) }, label = { Text(period.title) })
+                }
             }
         }
-
-        is ReportsUiState.Success -> {
-            LazyColumn(
-                modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // Header
-                item {
-                    Text(
-                        text = "Báo cáo tài chính",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-
-                // Filter Chips theo kỳ
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        ReportPeriod.entries.forEach { period ->
-                            FilterChip(
-                                selected = uiState.selectedPeriod == period,
-                                onClick = { onSelectPeriod(period) },
-                                label = { Text(period.title) },
-                            )
-                        }
-                    }
-                }
-
-                // Card tổng quan: Thu / Chi / Tiết kiệm
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Dòng tiền trong kỳ",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Tổng thu",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                    Text(
-                                        text = CurrencyUtils.formatVnd(uiState.totalIncome),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = IncomeDark,
-                                    )
-                                }
-
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "Tổng chi",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                    Text(
-                                        text = CurrencyUtils.formatVnd(uiState.totalExpense),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ExpenseDark,
-                                    )
-                                }
+        item {
+            Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface) {
+                Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                    Text("Chênh lệch thu chi", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(10.dp))
+                    Text(CurrencyUtils.formatVnd(state.netSavings), style = MaterialTheme.typography.displaySmall,
+                        color = if (state.netSavings >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.height(24.dp))
+                    Row(Modifier.fillMaxWidth()) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AppIcon(Glyph.Income, modifier = Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.width(5.dp))
+                                Text("Thu nhập", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Tiết kiệm ròng",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                                val savingsColor = if (uiState.netSavings >= 0L) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.error
-                                }
-                                Text(
-                                    text = CurrencyUtils.formatVnd(uiState.netSavings),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = savingsColor,
-                                )
+                            Text(CurrencyUtils.formatVnd(state.totalIncome), style = MaterialTheme.typography.titleMedium)
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AppIcon(Glyph.Expense, modifier = Modifier.size(17.dp), tint = MaterialTheme.colorScheme.error)
+                                Spacer(Modifier.width(5.dp))
+                                Text("Chi tiêu", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
+                            Text(CurrencyUtils.formatVnd(state.totalExpense), style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }
-
-                // Mục Ngân sách tháng này (FR-BD-01, FR-BD-02, FR-BD-03)
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "Ngân sách tháng này",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        TextButton(onClick = onOpenSetBudget) {
-                            Text("+ Thiết lập")
-                        }
-                    }
-                }
-
-                if (uiState.budgetUsages.isEmpty()) {
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "Chưa có ngân sách nào cho tháng này.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Bấm '+ Thiết lập' để đặt hạn mức chi tiêu theo danh mục.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    items(uiState.budgetUsages, key = { it.budgetId }) { usage ->
-                        BudgetUsageItem(
-                            item = usage,
-                            onDelete = { onDeleteBudget(usage.budgetId) },
-                        )
-                    }
-                }
-
-                // Tiêu đề Chi tiêu theo danh mục
-                item {
-                    Text(
-                        text = "Phân bổ chi tiêu",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
-
-                if (uiState.categorySpendings.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "Chưa có khoản chi tiêu nào trong ${uiState.selectedPeriod.title.lowercase(Locale.getDefault())}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else {
-                    items(uiState.categorySpendings, key = { it.categoryId }) { item ->
-                        CategorySpendingItem(item = item)
-                    }
-                }
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Phân bổ chi tiêu", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                AppIcon(Glyph.Reports, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        if (state.categorySpendings.isEmpty()) {
+            item { EmptyPanel("Chưa có khoản chi", "Các giao dịch chi tiêu đã xác nhận sẽ xuất hiện ở đây.", Glyph.Reports) }
+        } else {
+            item { SpendingChart(state.categorySpendings, state.totalExpense) }
+            items(state.categorySpendings, key = { it.categoryId }) { CategorySpendingItem(it) }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Ngân sách tháng này", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                TextButton(onClick = onOpenSetBudget) { AppIcon(Glyph.Plus, modifier = Modifier.size(18.dp)); Text(" Thêm") }
+            }
+        }
+        if (state.budgetUsages.isEmpty()) {
+            item { EmptyPanel("Chi tiêu theo kế hoạch", "Đặt hạn mức cho từng danh mục để theo dõi tiến độ trong tháng.", Glyph.Wallet, "Đặt ngân sách", onOpenSetBudget) }
+        } else {
+            items(state.budgetUsages, key = { it.budgetId }) { usage ->
+                BudgetUsageItem(usage, { onDeleteBudget(usage.budgetId) })
             }
         }
     }
 }
 
+@Composable
+private fun SpendingChart(items: List<CategorySpendingUiModel>, total: Long) {
+    val colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+    val description = items.joinToString(". ") { "${it.categoryName}: ${CurrencyUtils.formatVnd(it.amount)}" }
+    Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(190.dp).semantics { contentDescription = description }) {
+            var start = -90f
+            items.forEachIndexed { index, item ->
+                val sweep = item.percentage.coerceIn(0f, 1f) * 360f
+                if (sweep > 0) drawArc(colors[index % colors.size], start, (sweep - 3f).coerceAtLeast(0.5f),
+                    useCenter = false, style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round))
+                start += sweep
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Tổng chi", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(CurrencyUtils.formatVnd(total), style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
 @Composable
 private fun CategorySpendingItem(
     item: CategorySpendingUiModel,
@@ -324,7 +233,7 @@ private fun CategorySpendingItem(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -382,7 +291,7 @@ private fun BudgetUsageItem(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -401,7 +310,7 @@ private fun BudgetUsageItem(
                             text = "VƯỢT HẠN MỨC",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = ExpenseDark,
+                            color = MaterialTheme.colorScheme.error,
                         )
                     } else if (item.isWarning) {
                         Spacer(modifier = Modifier.padding(start = 6.dp))
@@ -500,7 +409,20 @@ fun SetBudgetDialog(
                     },
                     label = { Text("Hạn mức ngân sách (VND)") },
                     isError = limitError != null,
-                    supportingText = limitError?.let { { Text(it) } },
+                    supportingText = {
+                        if (limitError != null) {
+                            Text(limitError!!, color = MaterialTheme.colorScheme.error)
+                        } else {
+                            val amt = limitText.toLongOrNull() ?: 0L
+                            if (amt > 0L) {
+                                Text(
+                                    text = "= ${CurrencyUtils.formatVnd(amt)}",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),

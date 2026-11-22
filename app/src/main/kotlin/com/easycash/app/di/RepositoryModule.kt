@@ -1,12 +1,16 @@
 package com.easycash.app.di
 
+import com.easycash.domain.DataManagementRepository
+import com.easycash.data.RoomDataManagementRepository
 import com.easycash.domain.AccountRepository
 import com.easycash.domain.BudgetRepository
 import com.easycash.domain.CategoryRepository
 import com.easycash.domain.NotificationSourceRepository
 import com.easycash.domain.StatsRepository
 import com.easycash.domain.TransactionRepository
-import com.easycash.ui.fake.FakeBudgetRepository
+import com.easycash.data.RoomBudgetRepository
+import com.easycash.data.local.MIGRATION_4_5
+import com.easycash.data.local.MIGRATION_5_6
 import com.easycash.data.RoomFinanceRepository
 import com.easycash.data.local.MIGRATION_1_2
 import com.easycash.data.local.DefaultCategories
@@ -28,7 +32,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object PreviewRepositoryModule {
+object RepositoryModule {
+    @Provides
+    @Singleton
+    fun provideDataManagement(database: EasyCashDatabase): DataManagementRepository = RoomDataManagementRepository(database)
+
     @Provides
     @Singleton
     fun provideNotificationProcessor(database: EasyCashDatabase) = NotificationProcessor(database)
@@ -40,7 +48,7 @@ object PreviewRepositoryModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): EasyCashDatabase =
-        Room.databaseBuilder(context, EasyCashDatabase::class.java, "easycash.db").addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).addCallback(DefaultCategories).build()
+        Room.databaseBuilder(context, EasyCashDatabase::class.java, "easycash.db").addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).addCallback(DefaultCategories).build()
 
     @Provides
     @Singleton
@@ -68,7 +76,5 @@ object PreviewRepositoryModule {
 
     @Provides
     @Singleton
-    fun provideBudgetRepository(
-        transactionRepository: TransactionRepository,
-    ): BudgetRepository = FakeBudgetRepository(transactionRepository = transactionRepository)
+    fun provideBudgetRepository(database: EasyCashDatabase): BudgetRepository = RoomBudgetRepository(database)
 }

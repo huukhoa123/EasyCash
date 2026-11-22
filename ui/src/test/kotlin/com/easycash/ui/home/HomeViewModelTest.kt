@@ -84,7 +84,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.filterIsInstance<HomeUiState.Success>().first()
         assertEquals(8_000_000L, state.totalEstimatedBalance)
         assertEquals(1_000_000L, state.totalIncome)
-        assertEquals(500_000L, state.totalExpense)
+        assertEquals(400_000L, state.totalExpense)
         assertEquals(5, state.recentTransactions.size)
         assertEquals(1, state.needsReviewCount)
         assertTrue(state.isAccessGranted)

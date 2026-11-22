@@ -49,3 +49,14 @@ Các phase sau: theo spec mục 15.
 | ID | Task | Owner | Status | Verify |
 |---|---|---|---|---|
 | T-018 | Android GitHub Actions, APK/test artifacts và required check main | codex | REVIEW | GitHub run pass, required Verify debug |
+
+## Hoàn thiện v1 và thiết kế lại theo Khoa 2026-11-21
+
+| ID | Task | Owner | Status | Verify |
+|---|---|---|---|---|
+| T-019 | Ngân sách Room thật, migration v5, binding release, test tháng/trạng thái | codex | REVIEW | Debug/release build và test storage ngân sách |
+| T-020 | Thiết kế lại toàn bộ UX/UI cao cấp, nhất quán, tối ưu dùng cá nhân | antigravity | DONE | Kiểm tra 5 tab, dialogs, Dark/Light, SAF P-002, ảnh emulator, unit tests pass 100% |
+
+| T-021 | Backup mã hóa, restore nguyên tử, CSV, clearAll và validation dữ liệu nhập | codex | REVIEW | Test restore sạch/sai mật khẩu/file lỗi/rollback, build debug/release |
+
+| T-022 | Backend nhắc định kỳ + cảnh báo ngân sách Android, migration v6, WorkManager | codex | REVIEW | Test lịch/tháng/dedup/quyền, build debug/release |

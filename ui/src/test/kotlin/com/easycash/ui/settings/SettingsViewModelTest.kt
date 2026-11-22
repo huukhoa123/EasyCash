@@ -99,4 +99,110 @@ class SettingsViewModelTest {
         assertEquals(1, state1.categories.size)
         assertEquals("Xăng xe", state1.categories[0].name)
     }
+
+    @Test
+    fun `exportBackup validates password length and wipes char array`() = runTest {
+        val srcRepo = FakeNotificationSourceRepository(emptyList())
+        val accRepo = FakeAccountRepository(emptyList())
+        val catRepo = FakeCategoryRepository(emptyList())
+        val dataRepo = com.easycash.ui.fake.FakeDataManagementRepository()
+        val viewModel = SettingsViewModel(srcRepo, accRepo, catRepo, dataRepo)
+
+        var exportedBytes: ByteArray? = null
+        val shortPass = "short".toCharArray()
+        viewModel.exportBackup(shortPass) { exportedBytes = it }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        org.junit.Assert.assertNull(exportedBytes)
+        assertEquals("Mật khẩu sao lưu phải có từ 8 đến 1024 ký tự.", viewModel.writeError.value)
+        // Password should be wiped
+        assertTrue(shortPass.all { it == '\u0000' })
+
+        viewModel.dismissWriteError()
+        org.junit.Assert.assertNull(viewModel.writeError.value)
+
+        val longPass = CharArray(1025) { 'a' }
+        viewModel.exportBackup(longPass) { exportedBytes = it }
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals("Mật khẩu sao lưu phải có từ 8 đến 1024 ký tự.", viewModel.writeError.value)
+        assertTrue(longPass.all { it == '\u0000' })
+
+        viewModel.dismissWriteError()
+
+        val validPass = "strongPassword123".toCharArray()
+        viewModel.exportBackup(validPass) { exportedBytes = it }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        org.junit.Assert.assertNotNull(exportedBytes)
+        assertEquals(3, exportedBytes?.size)
+        // Valid password should also be wiped in finally
+        assertTrue(validPass.all { it == '\u0000' })
+    }
+
+    @Test
+    fun `restoreBackup validates exact boundary size and wipes password`() = runTest {
+        val srcRepo = FakeNotificationSourceRepository(emptyList())
+        val accRepo = FakeAccountRepository(emptyList())
+        val catRepo = FakeCategoryRepository(emptyList())
+        val dataRepo = com.easycash.ui.fake.FakeDataManagementRepository()
+        val viewModel = SettingsViewModel(srcRepo, accRepo, catRepo, dataRepo)
+
+        var restored = false
+        // Boundary check: 32MB + 49 bytes (> MAX_BACKUP_SIZE)
+        val oversized = ByteArray(SettingsViewModel.MAX_BACKUP_SIZE + 1)
+        val pass1 = "password".toCharArray()
+        viewModel.restoreBackup(oversized, pass1) { restored = true }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(restored)
+        assertEquals("File sao lưu vượt quá dung lượng tối đa 32MB.", viewModel.writeError.value)
+        assertTrue(pass1.all { it == '\u0000' })
+
+        viewModel.dismissWriteError()
+
+        // Boundary check: exactly MAX_BACKUP_SIZE (32MB + 48 bytes) should be ACCEPTED
+        val boundaryBytes = ByteArray(SettingsViewModel.MAX_BACKUP_SIZE)
+        val pass2 = "boundaryPass".toCharArray()
+        viewModel.restoreBackup(boundaryBytes, pass2) { restored = true }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(restored)
+        assertEquals("Khôi phục dữ liệu thành công!", viewModel.infoMessage.value)
+        assertTrue(pass2.all { it == '\u0000' })
+
+        // Failure restore check
+        viewModel.dismissInfoMessage()
+        dataRepo.restoreResult = com.easycash.domain.WriteResult.Failure.INVALID_INPUT
+        var failedRestored = false
+        val pass3 = "wrongPassword".toCharArray()
+        val validBytes = byteArrayOf(1, 2, 3)
+        viewModel.restoreBackup(validBytes, pass3) { failedRestored = true }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(failedRestored)
+        assertEquals("Khôi phục thất bại. Kiểm tra mật khẩu hoặc tính hợp lệ của file.", viewModel.writeError.value)
+        assertTrue(pass3.all { it == '\u0000' })
+    }
+
+    @Test
+    fun `exportCsv and clearAllData invoke callbacks properly`() = runTest {
+        val srcRepo = FakeNotificationSourceRepository(emptyList())
+        val accRepo = FakeAccountRepository(emptyList())
+        val catRepo = FakeCategoryRepository(emptyList())
+        val dataRepo = com.easycash.ui.fake.FakeDataManagementRepository()
+        val viewModel = SettingsViewModel(srcRepo, accRepo, catRepo, dataRepo)
+
+        var csvOutput: String? = null
+        viewModel.exportCsv { csvOutput = it }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("id,account_id\n1,1", csvOutput)
+
+        var cleared = false
+        viewModel.clearAllData { cleared = true }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(cleared)
+        assertEquals("Đã xoá sạch dữ liệu và đưa về trạng thái ban đầu.", viewModel.infoMessage.value)
+    }
 }

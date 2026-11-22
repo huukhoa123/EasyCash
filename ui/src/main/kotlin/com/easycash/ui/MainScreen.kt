@@ -8,6 +8,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import com.easycash.ui.components.AppIcon
+import com.easycash.ui.components.Glyph
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -46,7 +50,9 @@ fun MainScreen(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.background,
+                tonalElevation = 0.dp,
+                modifier = Modifier.height(88.dp),
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
                 NavDestination.bottomNavItems.forEach { item ->
@@ -65,9 +71,14 @@ fun MainScreen(
                             }
                         },
                         icon = {
-                            Text(
-                                text = item.title.take(1),
-                                style = MaterialTheme.typography.titleMedium,
+                            AppIcon(
+                                glyph = when (item) {
+                                    NavDestination.Home -> Glyph.Home
+                                    NavDestination.Transactions -> Glyph.Transactions
+                                    NavDestination.Reports -> Glyph.Reports
+                                    NavDestination.Accounts -> Glyph.Wallet
+                                    NavDestination.Settings -> Glyph.Settings
+                                },
                             )
                         },
                         label = {
@@ -79,7 +90,7 @@ fun MainScreen(
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.surfaceVariant,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),

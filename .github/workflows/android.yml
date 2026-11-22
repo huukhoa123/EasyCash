@@ -30,7 +30,7 @@ jobs:
           packages: platform-tools
       - name: Build and test
         run: >-
-          ./gradlew assembleDebug testDebugUnitTest :domain:test --no-daemon
+          ./gradlew assembleDebug assembleRelease testDebugUnitTest :domain:test --no-daemon
           '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g'
           '-Pkotlin.compiler.execution.strategy=in-process'
       - name: Verify offline permission and module boundary

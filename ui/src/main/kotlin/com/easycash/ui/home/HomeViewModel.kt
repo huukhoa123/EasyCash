@@ -10,6 +10,7 @@ import com.easycash.domain.Transaction
 import com.easycash.domain.TransactionFilter
 import com.easycash.domain.TransactionRepository
 import com.easycash.domain.TransactionType
+import com.easycash.domain.TransactionStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -54,8 +55,9 @@ class HomeViewModel @Inject constructor(
         notificationSourceRepository.observeAccessGranted(),
     ) { accounts, allTxs, reviewCount, isGranted ->
         val totalBalance = accounts.sumOf { it.estimatedBalance }
-        val income = allTxs.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-        val expense = allTxs.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+        val counted = allTxs.filter { it.status == TransactionStatus.AUTO_RECORDED || it.status == TransactionStatus.USER_CONFIRMED }
+        val income = counted.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
+        val expense = counted.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
         val recent = allTxs.take(5)
         val accMap = accounts.associate { it.id to it.name }
 
