@@ -7,7 +7,7 @@ Mã màu, cỡ chữ, khoảng cách là **[ĐỀ XUẤT]**, Khoa có thể đ�
 
 Modern Premium Fintech: hiện đại, sạch, dễ đọc con số. Material 3.
 
-- **Dark Premium là mặc định.** Light Mode là tuỳ chọn.
+- **Khoa chốt hướng sáng, tinh gọn và cao cấp ngày 2026-11-22.** Chi tiết thiết kế mới và tiêu chí nghiệm thu trong [UI_REFRESH_LIGHT.md](UI_REFRESH_LIGHT.md); thay định hướng dark mặc định trước đây, giữ lựa chọn theme đã lưu.
 - Màu chủ đạo: **Emerald Green**, **Deep Navy**, **Teal**.
 - Con số tiền là nhân vật chính: lớn, rõ, căn chỉnh nhất quán.
 - Không làm UI "nói" quá mức về độ chính xác: số dư luôn gắn nhãn **ước tính**.

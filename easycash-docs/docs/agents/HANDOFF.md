@@ -722,3 +722,11 @@ Tích hợp logo đã tạo vào app launcher: adaptive API26+ với inset8dp ch
 Build assembleDebug/assembleRelease/testDebugUnitTest pass; build lại sau inset pass. apksigner xác minh cùng chứng chỉ bridge/release cũ. Đã xem icon192px, aapt xác nhận icon được đóng gói. Chưa xem trên launcher điện thoại thực tế. Giữ nguyên chức năng BIDV/chẩn đoán rc.3, Khoa đã xác nhận đọc thông báo. Release notes RELEASE_1.0.0_RC4.md.
 
 rc.4 đã công khai: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.4, source 66c9cc1, CI 45044352790 success. Bốn asset digest khớp. Khoa cài đè cùng dòng APK để giữ dữ liệu; chưa kiểm tra icon trên launcher điện thoại thực tế.
+
+### 2026-11-22 · codex · bàn giao UI sáng mới theo lựa chọn Khoa
+
+Khoa thấy UI hiện tại chưa ấn tượng, chọn “Sáng, tinh gọn và cao cấp”. Đã rà Home/Design/ảnh máy thật và đọc skill UI/UX Pro Max, pro-rules. Search script chưa chạy được vì Python launcher không khả dụng; không trình bày palette như kết quả search xác minh. Tạo docs/UI_REFRESH_LIGHT.md mô tả layout 5 tab, palette/token, kích thước chữ/spacing, giảm card lớn và nghiệm thu màn nhỏ/font lớn. Cập nhật UI_UX.md thay định hướng dark mặc định theo yêu cầu mới của Khoa. Không sửa source UI.
+
+Antigravity nhận T-024 READY và triển khai theo brief; gửi ảnh trước/sau, các trạng thái dữ liệu thật, build/test rồi Codex tích hợp APK. Chỉ giao tiếp qua file, chưa gọi hoặc xác nhận Antigravity đang chạy.
+
+Ghi riêng T-025 TODO để không mất yêu cầu chức năng trước khi chuyển UI: thông báo rõ tự ghi nhận và học danh mục giao dịch mới tương tự, không phải yêu cầu bỏ chống trùng. Chưa triển khai/hay thay contract các hành vi đó; không gắn nhãn UI giả như đã có.
