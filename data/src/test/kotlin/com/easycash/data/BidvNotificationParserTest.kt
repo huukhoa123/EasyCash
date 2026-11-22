@@ -24,6 +24,23 @@ class BidvNotificationParserTest {
     }
 
     @Test
+    fun `observed push without preamble or reference parses and deduplicates wrapped content`() {
+        val push = javaClass.getResource("/notifications/bidv/push-debit.txt")!!.readText()
+        val result = BidvNotificationParser.parse(push, zone) as BidvParseResult.Parsed
+        assertEquals(10000L, result.amount)
+        assertEquals(TransactionType.EXPENSE, result.type)
+        assertEquals(Instant.parse("2026-11-22T15:45:00Z").toEpochMilli(), result.occurredAtMillis)
+        val unwrapped = push.replace("MB-TKThe\n", "MB-TKThe ").replace("NGUOI THU\n", "NGUOI THU ")
+        assertEquals(result.dedupKey, (BidvNotificationParser.parse(unwrapped, zone) as BidvParseResult.Parsed).dedupKey)
+        assertNotEquals(result.dedupKey, (BidvNotificationParser.parse(push.replace("90,000", "80,000"), zone) as BidvParseResult.Parsed).dedupKey)
+        assertEquals(TransactionType.INCOME, (BidvNotificationParser.parse(push.replace("-10,000", "+10,000"), zone) as BidvParseResult.Parsed).type)
+        for (invalid in listOf(push.substringBefore("Số tiền GD"), push.substringBefore("Nội dung giao dịch"), push.replace("0000000001", "…"))) {
+            assertEquals(BidvParseResult.Unknown, BidvNotificationParser.parse(invalid, zone))
+        }
+        assertEquals(BidvParseResult.Ignored, BidvNotificationParser.parse("OTP giả 123456\n$push", zone))
+    }
+
+    @Test
     fun `reject sensitive failed truncated invalid and overflowing notifications`() {
         assertEquals(BidvParseResult.Ignored, BidvNotificationParser.parse("OTP giả 123456\n$fixture", zone))
         assertEquals(BidvParseResult.Ignored, BidvNotificationParser.parse("$fixture\nGiao dịch thất bại", zone))

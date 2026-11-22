@@ -19,6 +19,33 @@ import java.time.ZoneId
 @Config(sdk = [28], manifest = Config.NONE)
 class NotificationProcessorTest {
     @Test
+    fun `push without reference is recorded once and replay stays deduplicated after cleanup`() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
+        try {
+            val sources = RoomNotificationSourceRepository(db, flowOf(true))
+            val source = sources.observeAll().first().single()
+            val finance = RoomFinanceRepository(db)
+            val accountId = (finance.add(Account(0, "BIDV", AccountType.BANK, 100000, 100000, false)) as WriteResult.Success).value
+            sources.linkAccount(source.id, accountId)
+            sources.setEnabled(source.id, true)
+            val processor = NotificationProcessor(db)
+            val push = javaClass.getResource("/notifications/bidv/push-debit.txt")!!.readText()
+            val zone = ZoneId.of("Asia/Ho_Chi_Minh")
+            repeat(2) { processor.process(BidvNotificationParser.PACKAGE_NAME, it.toLong(), zone) { push } }
+            val transaction = finance.observe(TransactionFilter()).first().single()
+            assertEquals(10000L, transaction.amount)
+            assertEquals(TransactionStatus.NEEDS_REVIEW, transaction.status)
+            assertEquals(100000L, finance.observeAll().first().single().estimatedBalance)
+            db.notificationDao().deleteExpired(Long.MAX_VALUE)
+            finance.delete(transaction.id)
+            processor.process(BidvNotificationParser.PACKAGE_NAME, 3, zone) { push }
+            assertTrue(finance.observe(TransactionFilter()).first().isEmpty())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun `whitelist otp concurrent dedup and review preserve privacy and balances`() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
         try {

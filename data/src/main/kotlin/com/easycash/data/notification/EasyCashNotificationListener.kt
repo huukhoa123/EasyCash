@@ -26,6 +26,11 @@ class EasyCashNotificationListener : NotificationListenerService() {
         }
     }
 
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        activeNotifications.orEmpty().forEach { onNotificationPosted(it) }
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName != BidvNotificationParser.PACKAGE_NAME) return
         scope.launch {

@@ -692,3 +692,9 @@ Phát hiện lỗi độc lập: notificationText kiểm tra OTP trong EXTRA_TEX
 Antigravity cần làm rõ UI: nguồn bật nhưng chưa gán tài khoản không ghi giao dịch; nhãn hoặc hướng dẫn ngay cạnh bật nguồn. Chưa tự sửa UI. Không phát hành hotfix với tuyên bố đã sửa giao dịch thực tế khi chưa đủ mẫu.
 
 Kiểm chứng sửa textLines: assembleDebug/testDebugUnitTest pass, 21 backend tests không lỗi. Chưa sửa parser để đoán nội dung ảnh thu gọn; cần phần thông báo mở rộng đã che dữ liệu. Bản sửa source chưa cập nhật vào asset rc.1 đã phát hành.
+
+### 2026-11-22 · codex · sửa parser theo push BIDV thật, chuẩn bị rc.2
+
+Ảnh mở rộng Khoa cung cấp cho thấy push bắt đầu bằng thời gian, không có câu chào và mã giao dịch. Parser v1 bắt buộc hai trường này nên bỏ qua. Parser v2 hỗ trợ mẫu quan sát, fixture push-debit.txt thay toàn bộ dữ liệu cá nhân bằng giả. Không đưa ảnh thật vào Git. Giữ dedup key của mẫu có reference cũ; mẫu không reference dùng hash tài khoản/thời gian/số tiền có dấu/số dư/nội dung chuẩn hóa. Hai giao dịch có mọi trường này giống hệt không thể phân biệt từ thông báo, cần đối chiếu thủ công. Không tự ghép chuyển nội bộ.
+
+Listener đọc lại active notifications khi kết nối, vẫn kiểm tra whitelist/source enabled và OTP trước xử lý. Bản rc.2 versionCode3 giữ khóa bridge và release như rc.1; hướng dẫn RELEASE_1.0.0_RC2.md. Build debug/release/testDebugUnitTest pass, 23 backend tests không lỗi, chứng chỉ cả hai APK đúng như rc.1. Chưa nghiệm thu thiết bị thật, cần Khoa cập nhật đúng APK và bật lại quyền đọc để thử thông báo vẫn đang hiện, không cần chuyển tiền thêm.
