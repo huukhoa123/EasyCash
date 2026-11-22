@@ -36,6 +36,31 @@ class NotificationContentTest {
     }
 
     @Test
+    fun `inbox lines are parsed instead of truncated short body`() {
+        val notification = Notification().apply {
+            extras = Bundle().apply {
+                putCharSequence(Notification.EXTRA_TEXT, "Thời gian giao dịch: 22:45 22/11/2026")
+                putCharSequenceArray(Notification.EXTRA_TEXT_LINES, fixture.lines().toTypedArray())
+            }
+        }
+        assertEquals(fixture.lineSequence().filter { it.isNotBlank() }.toList(), notificationText(notification).lines())
+        org.junit.Assert.assertTrue(
+            BidvNotificationParser.parse(notificationText(notification), ZoneId.of("UTC")) is BidvParseResult.Parsed
+        )
+    }
+
+    @Test
+    fun `collapsed notification without amount remains unknown`() {
+        val notification = Notification().apply {
+            extras = Bundle().apply {
+                putCharSequence(Notification.EXTRA_TITLE, "Thông báo BIDV")
+                putCharSequence(Notification.EXTRA_TEXT, "Thời gian giao dịch: 22:45 22/11/2026\nTài khoản thanh toán: 0000000000…")
+            }
+        }
+        assertEquals(BidvParseResult.Unknown, BidvNotificationParser.parse(notificationText(notification), ZoneId.of("UTC")))
+    }
+
+    @Test
     fun `blank expanded text falls back to short body`() {
         val notification = Notification().apply {
             extras = Bundle().apply {

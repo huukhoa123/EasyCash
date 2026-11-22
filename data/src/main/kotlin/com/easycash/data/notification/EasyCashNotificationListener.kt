@@ -51,13 +51,14 @@ internal fun notificationText(notification: Notification): String {
     val extras = notification.extras
     val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
     val expanded = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
+    val lines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES).orEmpty().map { it.toString() }
     val fields = listOf(
         extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty(),
         extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString().orEmpty(),
         extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString().orEmpty(),
         text,
         expanded,
-    ) + extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES).orEmpty().map { it.toString() }
+    ) + lines
     if (fields.any { BidvNotificationParser.containsSensitiveText(it) }) return "OTP"
-    return expanded.ifBlank { text }
+    return expanded.ifBlank { lines.filter { it.isNotBlank() }.joinToString("\n").ifBlank { text } }
 }

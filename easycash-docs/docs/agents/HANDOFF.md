@@ -682,3 +682,13 @@ Emulator không kết nối ở lượt này nên chưa smoke install APK mới.
 Release: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.1, prerelease=true/draft=false, source 08b748ef40144579b3757ce2b4948e89a255775f. CI 45039121174 success. Hai APK cùng SHA256SUMS.txt/SIGNING-CERTIFICATES.txt đã tải lên, digest API của cả 4 assets khớp local. T-023 hoàn tất phạm vi đóng gói/phát hành thử.
 
 Khoa đang có dữ liệu dùng backup-bridge để cập nhật khóa cũ, không gỡ app. Chỉ chuyển sang khóa release sau khi kiểm tra khôi phục backup; có thể nghiệm thu ngân hàng ngay trên bridge. Chưa nghiệm thu máy thật/Android13+/push, MoMo chưa có parser. Không coi là stable. Khóa ký và mật khẩu chỉ ở .signing/ ignored, chủ máy cần sao lưu riêng.
+
+### 2026-11-22 · codex · điều tra BIDV không tạo giao dịch trên máy Khoa
+
+Khoa gửi ảnh thông báo thu gọn, chỉ thấy thời gian và dòng tài khoản (không lưu ảnh/dữ liệu thật vào repo). Khoa đã cấp quyền nhưng chưa biết cách liên kết tài khoản. Đã hướng dẫn Cài đặt > BIDV > Đổi tài khoản đích. Processor không tạo transaction khi source.linkedAccountId=null; chưa xác minh trạng thái trên máy nên chưa kết luận nguyên nhân duy nhất.
+
+Phát hiện lỗi độc lập: notificationText kiểm tra OTP trong EXTRA_TEXT_LINES nhưng bỏ các dòng này khi trích nội dung. Sửa fallback bigText > textLines > text; giữ lọc OTP trên tất cả fields. Thêm test nhiều dòng thay vì body thu gọn và test thiếu số tiền phải UNKNOWN. Không đoán định dạng push BIDV mới: parser còn yêu cầu câu mở đầu/mã giao dịch từ fixture cũ, cần thông báo mở rộng đã che dữ liệu để đối chiếu.
+
+Antigravity cần làm rõ UI: nguồn bật nhưng chưa gán tài khoản không ghi giao dịch; nhãn hoặc hướng dẫn ngay cạnh bật nguồn. Chưa tự sửa UI. Không phát hành hotfix với tuyên bố đã sửa giao dịch thực tế khi chưa đủ mẫu.
+
+Kiểm chứng sửa textLines: assembleDebug/testDebugUnitTest pass, 21 backend tests không lỗi. Chưa sửa parser để đoán nội dung ảnh thu gọn; cần phần thông báo mở rộng đã che dữ liệu. Bản sửa source chưa cập nhật vào asset rc.1 đã phát hành.
