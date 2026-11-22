@@ -30,6 +30,8 @@ room {
 
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
     systemProperty("easycash.schemaRoot", layout.projectDirectory.dir("schemas").asFile.absolutePath)
+    // repo1 returns HTTP 429 on GitHub runners; use Maven Central's canonical endpoint.
+    systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
 }
 
 dependencies {

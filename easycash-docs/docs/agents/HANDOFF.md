@@ -664,3 +664,7 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **Kiểm chứng:** assembleDebug, assembleRelease, testDebugUnitTest và :domain:test thành công. RemindersViewModelTest có 8 test, 0 lỗi; manifest debug không có INTERNET. Bản sửa chuẩn bị push main.
 
 **Chuẩn bị phát hành:** thêm docs/RELEASE_CHECKLIST.md với quy trình giữ dữ liệu bản thử và kiểm tra máy thật. Chưa ký/phát hành stable; vẫn cần nghiệm thu Android13+, push BIDV/MoMo thật và chuyển dữ liệu trên điện thoại.
+
+### 2026-11-22 · codex · sửa tải dependency Robolectric trên CI
+
+CI 45003820856 thất bại vì repo1.maven.org trả HTTP 429 cho android-all-instrumented, không phải assertion nghiệp vụ. Đặt robolectric.dependency.repo.url sang https://repo.maven.apache.org/maven2 trong cấu hình Test của :data. Endpoint trả HTTP 200; chạy lại :data:testDebugUnitTest thành công. Không thay đổi dependency hay bỏ test.
