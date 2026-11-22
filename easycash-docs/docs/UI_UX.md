@@ -5,6 +5,8 @@ Mã màu, cỡ chữ, khoảng cách là **[ĐỀ XUẤT]**, Khoa có thể đ�
 
 ## 1. Định hướng
 
+Hướng mới theo ảnh Khoa duyệt ngày 2026-11-23: [UI_LEDGER_DIRECTION.md](UI_LEDGER_DIRECTION.md), sổ tiền cá nhân hiện đại. Ưu tiên brief này cho bố cục/thị giác thay vì tiếp tục tinh chỉnh bộ thẻ cũ.
+
 Modern Premium Fintech: hiện đại, sạch, dễ đọc con số. Material 3.
 
 - **Khoa chốt hướng sáng, tinh gọn và cao cấp ngày 2026-11-22.** Chi tiết thiết kế mới và tiêu chí nghiệm thu trong [UI_REFRESH_LIGHT.md](UI_REFRESH_LIGHT.md); thay định hướng dark mặc định trước đây, giữ lựa chọn theme đã lưu.

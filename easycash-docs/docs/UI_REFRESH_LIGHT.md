@@ -1,5 +1,7 @@
 # EasyCash — giao diện sáng, tinh gọn và cao cấp
 
+> Cập nhật theo ảnh tham khảo Khoa ngày 2026-11-23: [UI_LEDGER_DIRECTION.md](UI_LEDGER_DIRECTION.md) là hướng thị giác/bố cục mới ưu tiên. Giữ tiêu chí chức năng và kiểm tra trong tài liệu này.
+
 Khoa chọn hướng này trong chat ngày 2026-11-22, thay định hướng dark mặc định trước đây. Antigravity triển khai :ui và MainActivity; Codex nghiệm thu tích hợp. Không đổi contract để làm phần trình bày.
 
 ## Vấn đề cần giải quyết

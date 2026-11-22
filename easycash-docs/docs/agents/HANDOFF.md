@@ -784,3 +784,11 @@ Review các thay đổi chưa commit của Antigravity theo UI_REFRESH_LIGHT.md,
 3. [Chưa đạt brief thiết kế] HomeScreen.kt:415 và TransactionsScreen.kt:399 vẫn Surface riêng từng giao dịch với outline/bo14dp, TransactionsScreen.kt:334 cách từng item8dp. Home vẫn nhiều surface xếp dọc. Có thay đổi thật về theme, gộp thu/chi và thu nhỏ header, nhưng chưa chuyển danh sách thành hàng nhẹ/divider như brief, nên chưa đủ khác biệt bố cục. Antigravity cần làm lại nhịp danh sách, giảm khung; giữ dữ liệu và hành vi.
 
 Handoff nêu screenshot_light_home.png... nhưng không tìm thấy screenshot*.png trong workspace (kể cả file ignored, bỏ .git/.gradle). Chưa xác nhận được ảnh trước/sau hoặc nghiệm thu 360dp/font1.3. Cần cung cấp đường dẫn ảnh thực; Codex chưa chấm chất lượng hình/render trên máy thật và chưa chạy UI interaction test. Không coi unit test/build pass là nghiệm thu thiết kế. Kết luận: sửa1/2 và hoàn thiện3 cùng ảnh nghiệm thu trước khi chốt T-024.
+
+### 2026-11-23 · codex · hướng rebuild mới theo ảnh tham khảo của Khoa
+
+Khoa yêu cầu sáng tạo từ ảnh kiểu sổ thu chi, không sao chép và phải khác rõ UI cũ. Brief chính docs/UI_LEDGER_DIRECTION.md thay phần thị giác/bố cục UI_REFRESH_LIGHT.md; đã cập nhật chỉ dẫn ở UI_UX.md và brief cũ. Ảnh chỉ ở hội thoại, không đưa lên GitHub công khai; auto-review không cho công khai ảnh khi chưa có ủy quyền rõ.
+
+Antigravity cần rebuild T-024: canvas ivory, số dư butter, thu mint/chi rose, ví lưới, giao dịch phẳng chia ngày gợi sổ/hóa đơn. Không chỉ đổi màu/bo góc bộ card cũ. Không sao chép PWA/banner/khung điện thoại. Làm Home thành lát cắt đầy đủ trước rồi áp sang tab khác; ảnh trước/sau cùng dữ liệu, file có thật, light/dark/360dp/font1.3. Sửa cả lỗi review tìm kiếm và account-date row trước nghiệm thu.
+
+Chưa sửa UI/MainActivity hoặc xác nhận Antigravity nhận lượt mới. Chưa có APK rebuild. T-025/Timo giữ nguyên trạng thái; không trộn logic tiền vào thiết kế.
