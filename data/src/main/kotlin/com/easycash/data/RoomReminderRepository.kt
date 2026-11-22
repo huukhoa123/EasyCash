@@ -4,12 +4,22 @@ import android.database.sqlite.SQLiteException
 import androidx.room.withTransaction
 import com.easycash.data.local.EasyCashDatabase
 import com.easycash.data.local.ReminderEntity
+import com.easycash.domain.CategoryType
+import com.easycash.domain.Reminder
+import com.easycash.domain.ReminderFrequency
+import com.easycash.domain.ReminderRepository
 import com.easycash.domain.WriteResult
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-class RoomReminderRepository(private val database: EasyCashDatabase) {
+class RoomReminderRepository(private val database: EasyCashDatabase) : ReminderRepository {
     private val dao = database.reminderDao()
 
-    fun observeAll() = dao.observeAll()
+    override fun observeAll(): Flow<List<Reminder>> = dao.observeAll().map { list ->
+        list.map { it.toDomain() }
+    }
+
+    override suspend fun upsert(reminder: Reminder): WriteResult<Long> = upsert(reminder.toEntity())
 
     suspend fun upsert(reminder: ReminderEntity): WriteResult<Long> = write {
         if (reminder.name.isBlank() || reminder.type !in listOf("INCOME", "EXPENSE") ||
@@ -33,7 +43,7 @@ class RoomReminderRepository(private val database: EasyCashDatabase) {
         }
     }
 
-    suspend fun delete(id: Long): WriteResult<Unit> = write {
+    override suspend fun delete(id: Long): WriteResult<Unit> = write {
         if (dao.delete(id) == 0) WriteResult.Failure.NOT_FOUND else WriteResult.Success(Unit)
     }
 
@@ -43,3 +53,33 @@ class RoomReminderRepository(private val database: EasyCashDatabase) {
         WriteResult.Failure.STORAGE_ERROR
     }
 }
+
+internal fun ReminderEntity.toDomain() = Reminder(
+    id = id,
+    name = name,
+    accountId = accountId,
+    categoryId = categoryId,
+    type = CategoryType.valueOf(type),
+    amount = amount,
+    frequency = ReminderFrequency.valueOf(frequency),
+    dayRule = dayRule,
+    nextDueAtMillis = nextDueAt,
+    remindBeforeDays = remindBeforeDays,
+    isActive = isActive,
+)
+
+internal fun Reminder.toEntity(createdAt: Long = 0, updatedAt: Long = 0) = ReminderEntity(
+    id = id,
+    name = name,
+    type = type.name,
+    amount = amount,
+    accountId = accountId,
+    categoryId = categoryId,
+    frequency = frequency.name,
+    dayRule = dayRule,
+    nextDueAt = nextDueAtMillis,
+    remindBeforeDays = remindBeforeDays,
+    isActive = isActive,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)

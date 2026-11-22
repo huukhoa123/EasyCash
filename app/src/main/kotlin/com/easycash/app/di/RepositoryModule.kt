@@ -6,9 +6,11 @@ import com.easycash.domain.AccountRepository
 import com.easycash.domain.BudgetRepository
 import com.easycash.domain.CategoryRepository
 import com.easycash.domain.NotificationSourceRepository
+import com.easycash.domain.ReminderRepository
 import com.easycash.domain.StatsRepository
 import com.easycash.domain.TransactionRepository
 import com.easycash.data.RoomBudgetRepository
+import com.easycash.data.RoomReminderRepository
 import com.easycash.data.local.MIGRATION_4_5
 import com.easycash.data.local.MIGRATION_5_6
 import com.easycash.data.RoomFinanceRepository
@@ -77,4 +79,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideBudgetRepository(database: EasyCashDatabase): BudgetRepository = RoomBudgetRepository(database)
+
+    @Provides
+    @Singleton
+    fun provideReminderRepository(database: EasyCashDatabase): ReminderRepository = RoomReminderRepository(database)
 }

@@ -591,3 +591,44 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 **Test bổ sung:** tạo DB từ schema JSON v4 thực sự đã lưu, chèn tài khoản/giao dịch cũ rồi mở qua migration v4-v5-v6. Số dư 1000-200=800 và ghi chú cũ được giữ nguyên, các bảng mới rỗng đúng. 19 test backend pass. CI run 44992743624 của bản tích hợp đã success.
 
 **Giới hạn:** đây là kiểm chứng schema/certificate và emulator, chưa thay thế kiểm tra dữ liệu trên điện thoại của Khoa. Chưa phát hành stable v1.
+
+
+### 2026-11-22 · antigravity · ACK P-003 & Hoàn thiện toàn diện UI Quản lý Khoản nhắc định kỳ (T-022 DONE)
+
+**Đã xong:**
+- **ACK Proposal P-003:** Đã cập nhật `CONTRACTS.md`, xác nhận toàn diện mô hình `Reminder`, `ReminderFrequency` (`WEEKLY`, `MONTHLY`, `YEARLY`) và interface `ReminderRepository`. Chuyển P-003 sang mục `Active`.
+- **Domain & Data Wiring:**
+  - Bổ sung data class `Reminder` và enum `ReminderFrequency` trong `:domain` (`Models.kt`).
+  - Bổ sung `ReminderRepository` interface trong `:domain` (`Repositories.kt`).
+  - `RoomReminderRepository` (`:data`) triển khai interface `ReminderRepository` với mapper `toDomain()` / `toEntity()`, duy trì backward-compatibility cho các unit test nội bộ.
+  - Bind `ReminderRepository` vào Hilt `RepositoryModule` (`:app`).
+  - Cập nhật `FakeReminderRepository` trong `:ui` để hỗ trợ test độc lập.
+- **Xây dựng giao diện Khoản nhắc định kỳ (FR-RC-01, FR-RC-02) chuẩn UI/UX Pro Max:**
+  - Thêm vector SVG glyphs độc lập trong `Design.kt`: `Bell`, `Repeat`, `Calendar`.
+  - Tạo `RemindersViewModel` (@HiltViewModel): tính toán ngày đến hạn tiếp theo (`calculateInitialNextDue`), trạng thái sắp đến hạn (`isDueSoon`), tổng tiền định kỳ hàng tháng (`totalMonthlyEstimatedAmount`), và các thao tác CRUD.
+  - Tạo `RemindersScreen.kt`:
+    - Thẻ tổng quan số khoản đang bật và tổng dự kiến chi / tháng.
+    - Banner xin quyền thông báo `POST_NOTIFICATIONS` trên Android 13+ khi người dùng chưa cấp quyền.
+    - Thẻ `ReminderCard`: hiển thị tên khoản, số tiền VNĐ, badge chu kỳ (tuần/thứ, tháng/ngày, năm), tài khoản/danh mục liên kết, ngày đến hạn kế tiếp, số ngày nhắc trước, switch bật/tắt trực tiếp, nút sửa và xoá.
+    - `AddEditReminderDialog`: tạo mới hoặc chỉnh sửa khoản định kỳ với đầy đủ kiểm tra hợp lệ, hỗ trợ chọn chu kỳ, ngày lùi tự động cho tháng ngắn, và preview số tiền tức thời.
+  - Tích hợp điều hướng mượt mà: Sub-tab `Báo cáo & Ngân sách` ↔ `Khoản định kỳ` ngay trên màn hình Báo cáo (`ReportsScreen`), giữ nguyên trạng thái khi chuyển đổi.
+- **Kiểm chứng & Unit Tests:**
+  - Viết bộ unit test `RemindersViewModelTest` kiểm tra trọn vẹn: mapping thông tin, bật/tắt active, validation tên/số tiền, xoá khoản nhắc và thuật toán tính ngày đến hạn tuần/tháng/năm.
+  - `./gradlew testDebugUnitTest`: Pass 100% (tất cả các test trong `:domain`, `:data`, `:ui`, `:app`).
+  - `./gradlew assembleRelease`: Build thành công (137 actionable tasks).
+  - `./gradlew assembleDebug`: Cài đặt APK và xác minh trực tiếp trên emulator `emulator-5554`: tab Báo cáo -> chuyển tab Khoản định kỳ -> bấm "+ Thêm khoản nhắc" -> nhập "Tien phong tro", 3.500.000đ -> lưu thành công, hiển thị thẻ và cập nhật số tiền dự kiến hàng tháng chính xác.
+  - Cập nhật `T-022` thành `DONE` trong `TASKS.md`.
+
+**Codex / Khoa cần làm tiếp:**
+- Backend và Frontend của tính năng Nhắc định kỳ (FR-RC) đã hoàn tất trọn vẹn end-to-end.
+- Chuẩn bị rà soát tổng thể để hợp nhất và phát hành bản thử nghiệm tiếp theo.
+
+### 2026-11-22 · codex · nghiệm thu tích hợp P-003 từ Antigravity
+
+**Đã kiểm tra:** domain Reminder/ReminderRepository, Room mapper, Hilt và UI nhắc/quyền đã nối. Codex tiếp nhận rà soát phần backend bổ sung. Sửa mapper không tự đoán EXPENSE/MONTHLY khi enum lưu trữ không hợp lệ. Test domain upsert thật và enum lỗi được thêm vào FinancialAlertEngineTest.
+
+**Kết quả:** assembleDebug, assembleRelease, testDebugUnitTest pass; 19 backend tests pass. Không ký/phát hành stable.
+
+**Frontend cần xử lý:** RemindersViewModel.kt tính totalMonthlyEstimatedAmount bằng amt*4 và sumOf Long. Với amount=Long.MAX_VALUE/4+1 cho WEEKLY hoặc tổng nhiều khoản MONTHLY lớn, số hiển thị bị wrap thành âm. Cần phép tính an toàn và trạng thái vượt giới hạn hiển thị, không âm thầm clamp hoặc đổi giá trị khoản nhắc; thêm test hồi quy. Quyền POST_NOTIFICATIONS hiện chỉ remember ban đầu, nên cập nhật lại khi app resume sau khi người dùng thay đổi quyền ngoài app.
+
+**Còn nghiệm thu:** Android13+ trên máy thật, push ngân hàng/MoMo, ký release và hướng dẫn chuyển dữ liệu. Luồng nhắc backend không tự tạo transaction/thanh toán.

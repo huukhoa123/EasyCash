@@ -5,6 +5,7 @@ enum class TransactionStatus { AUTO_RECORDED, USER_CONFIRMED, NEEDS_REVIEW, REJE
 enum class TransactionOrigin { MANUAL, NOTIFICATION }
 enum class AccountType { CASH, BANK, EWALLET }
 enum class CategoryType { INCOME, EXPENSE }
+enum class ReminderFrequency { WEEKLY, MONTHLY, YEARLY }
 
 data class Account(
     val id: Long,
@@ -53,6 +54,20 @@ data class NotificationSource(
     val displayName: String,
     val isEnabled: Boolean,
     val linkedAccountId: Long?,
+)
+
+data class Reminder(
+    val id: Long,
+    val name: String,
+    val accountId: Long,
+    val categoryId: Long?,
+    val type: CategoryType,
+    val amount: Long?,
+    val frequency: ReminderFrequency,
+    val dayRule: Int,
+    val nextDueAtMillis: Long,
+    val remindBeforeDays: Int,
+    val isActive: Boolean,
 )
 
 data class TimeRange(val startInclusiveMillis: Long, val endExclusiveMillis: Long)

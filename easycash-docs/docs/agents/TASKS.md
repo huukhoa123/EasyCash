@@ -7,7 +7,7 @@ Nhận việc: đổi Owner/Status trước khi bắt đầu. Không nhận task
 
 | ID | Task | Owner | Status | Phụ thuộc | Tiêu chí xong (verify) |
 |---|---|---|---|---|---|
-| T-001 | Khởi tạo project Gradle Kotlin DSL với 4 module :app :ui :domain :data, version catalog, Hilt, Room skeleton. Manifest **không** có INTERNET. | codex | DONE | — | ./gradlew assembleDebug pass; :ui không phụ thuộc :data (kiểm tra trong uild.gradle.kts) |
+| T-001 | Khởi tạo project Gradle Kotlin DSL với 4 module :app :ui :domain :data, version catalog, Hilt, Room skeleton. Manifest **không** có INTERNET. | codex | DONE | — | ./gradlew assembleDebug pass; :ui không phụ thuộc :data (kiểm tra trong  uild.gradle.kts) |
 | T-002 | Chốt contract v1: model + repository interface trong :domain, cập nhật mục Active của CONTRACTS.md | codex | DONE | — | CONTRACTS.md khớp code; Antigravity ghi ACK |
 | T-003 | Design system: theme Material 3 Dark (mặc định) + Light theo token trong docs/UI_UX.md, typography, shapes, preview | antigravity | DONE | T-001 | Preview dark/light hiển thị đúng; không hard-code màu ngoài theme |
 | T-004 | Navigation Compose + Bottom Navigation 5 tab (Home, Transactions, Reports, Accounts, Settings) với màn hình placeholder | antigravity | DONE | T-001 | Chạy được, chuyển tab không mất trạng thái |
@@ -56,7 +56,5 @@ Các phase sau: theo spec mục 15.
 |---|---|---|---|---|
 | T-019 | Ngân sách Room thật, migration v5, binding release, test tháng/trạng thái | codex | REVIEW | Debug/release build và test storage ngân sách |
 | T-020 | Thiết kế lại toàn bộ UX/UI cao cấp, nhất quán, tối ưu dùng cá nhân | antigravity | DONE | Kiểm tra 5 tab, dialogs, Dark/Light, SAF P-002, ảnh emulator, unit tests pass 100% |
-
 | T-021 | Backup mã hóa, restore nguyên tử, CSV, clearAll và validation dữ liệu nhập | codex | REVIEW | Test restore sạch/sai mật khẩu/file lỗi/rollback, build debug/release |
-
-| T-022 | Backend nhắc định kỳ + cảnh báo ngân sách Android, migration v6, WorkManager | codex | REVIEW | Test lịch/tháng/dedup/quyền, build debug/release |
+| T-022 | Backend & UI nhắc định kỳ + cảnh báo ngân sách Android, migration v6, WorkManager | codex + antigravity | DONE | Test lịch/tháng/dedup/quyền, UI CRUD nhắc định kỳ, WorkManager, build debug/release pass |

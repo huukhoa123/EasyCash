@@ -1,57 +1,32 @@
 package com.easycash.ui.reports
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.contentDescription
-import com.easycash.ui.components.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.easycash.domain.Category
+import com.easycash.ui.components.*
+import com.easycash.ui.reminders.RemindersScreen
+import com.easycash.ui.reminders.RemindersViewModel
 import com.easycash.ui.theme.EasyCashTheme
 import com.easycash.ui.theme.ExpenseDark
 import com.easycash.ui.theme.IncomeDark
@@ -62,59 +37,90 @@ import java.util.Locale
 @Composable
 fun ReportsScreen(
     viewModel: ReportsViewModel? = null,
+    remindersViewModel: RemindersViewModel? = null,
     modifier: Modifier = Modifier,
 ) {
+    var selectedSubTab by rememberSaveable { mutableIntStateOf(0) }
     var showSetBudgetDialog by remember { mutableStateOf(false) }
 
-    if (viewModel == null) {
-        ReportsContent(
-            uiState = ReportsUiState.Success(
-                selectedPeriod = ReportPeriod.THIS_MONTH,
-                totalIncome = 15_000_000L,
-                totalExpense = 6_500_000L,
-                netSavings = 8_500_000L,
-                categorySpendings = listOf(
-                    CategorySpendingUiModel(1L, "Ăn uống", 3_500_000L, 0.54f),
-                    CategorySpendingUiModel(2L, "Mua sắm", 2_000_000L, 0.31f),
-                    CategorySpendingUiModel(3L, "Di chuyển", 1_000_000L, 0.15f),
-                ),
-                budgetUsages = listOf(
-                    BudgetUsageUiModel(1L, 1L, "Ăn uống", 4_000_000L, 3_500_000L, 0.875f, isWarning = true, isExceeded = false),
-                    BudgetUsageUiModel(2L, 2L, "Mua sắm", 1_500_000L, 2_000_000L, 1.33f, isWarning = false, isExceeded = true),
-                ),
-            ),
-            onSelectPeriod = {},
-            onOpenSetBudget = { showSetBudgetDialog = true },
-            onDeleteBudget = {},
-            modifier = modifier,
-        )
-    } else {
-        val writeError by viewModel.writeError.collectAsStateWithLifecycle()
-        if (writeError != null) {
-            AlertDialog(
-                onDismissRequest = viewModel::dismissWriteError,
-                title = { Text("Chưa lưu được thay đổi") },
-                text = { Text(writeError.orEmpty()) },
-                confirmButton = { TextButton(onClick = viewModel::dismissWriteError) { Text("Đã hiểu") } },
+    Column(modifier = modifier.fillMaxSize()) {
+        TabRow(
+            selectedTabIndex = selectedSubTab,
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp),
+        ) {
+            Tab(
+                selected = selectedSubTab == 0,
+                onClick = { selectedSubTab = 0 },
+                text = { Text("Báo cáo & Ngân sách") },
+                icon = { AppIcon(Glyph.Reports, modifier = Modifier.size(18.dp)) },
+            )
+            Tab(
+                selected = selectedSubTab == 1,
+                onClick = { selectedSubTab = 1 },
+                text = { Text("Khoản định kỳ") },
+                icon = { AppIcon(Glyph.Repeat, modifier = Modifier.size(18.dp)) },
             )
         }
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        ReportsContent(
-            uiState = uiState,
-            onSelectPeriod = { viewModel.selectPeriod(it) },
-            onOpenSetBudget = { showSetBudgetDialog = true },
-            onDeleteBudget = { viewModel.deleteBudget(it) },
-            modifier = modifier,
-        )
 
-        if (showSetBudgetDialog && uiState is ReportsUiState.Success) {
-            val success = uiState as ReportsUiState.Success
-            SetBudgetDialog(
-                categories = success.expenseCategories,
-                onDismiss = { showSetBudgetDialog = false },
-                onConfirm = { catId, limit ->
-                    viewModel.setBudget(catId, limit, onSuccess = { showSetBudgetDialog = false })
-                },
+        if (selectedSubTab == 0) {
+            if (viewModel == null) {
+                ReportsContent(
+                    uiState = ReportsUiState.Success(
+                        selectedPeriod = ReportPeriod.THIS_MONTH,
+                        totalIncome = 15_000_000L,
+                        totalExpense = 6_500_000L,
+                        netSavings = 8_500_000L,
+                        categorySpendings = listOf(
+                            CategorySpendingUiModel(1L, "Ăn uống", 3_500_000L, 0.54f),
+                            CategorySpendingUiModel(2L, "Mua sắm", 2_000_000L, 0.31f),
+                            CategorySpendingUiModel(3L, "Di chuyển", 1_000_000L, 0.15f),
+                        ),
+                        budgetUsages = listOf(
+                            BudgetUsageUiModel(1L, 1L, "Ăn uống", 4_000_000L, 3_500_000L, 0.875f, isWarning = true, isExceeded = false),
+                            BudgetUsageUiModel(2L, 2L, "Mua sắm", 1_500_000L, 2_000_000L, 1.33f, isWarning = false, isExceeded = true),
+                        ),
+                    ),
+                    onSelectPeriod = {},
+                    onOpenSetBudget = { showSetBudgetDialog = true },
+                    onDeleteBudget = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                val writeError by viewModel.writeError.collectAsStateWithLifecycle()
+                if (writeError != null) {
+                    AlertDialog(
+                        onDismissRequest = viewModel::dismissWriteError,
+                        title = { Text("Chưa lưu được thay đổi") },
+                        text = { Text(writeError.orEmpty()) },
+                        confirmButton = { TextButton(onClick = viewModel::dismissWriteError) { Text("Đã hiểu") } },
+                    )
+                }
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                ReportsContent(
+                    uiState = uiState,
+                    onSelectPeriod = { viewModel.selectPeriod(it) },
+                    onOpenSetBudget = { showSetBudgetDialog = true },
+                    onDeleteBudget = { viewModel.deleteBudget(it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                if (showSetBudgetDialog && uiState is ReportsUiState.Success) {
+                    val success = uiState as ReportsUiState.Success
+                    SetBudgetDialog(
+                        categories = success.expenseCategories,
+                        onDismiss = { showSetBudgetDialog = false },
+                        onConfirm = { catId, limit ->
+                            viewModel.setBudget(catId, limit, onSuccess = { showSetBudgetDialog = false })
+                        },
+                    )
+                }
+            }
+        } else {
+            RemindersScreen(
+                viewModel = remindersViewModel,
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -133,9 +139,11 @@ fun ReportsContent(
         return
     }
     val state = uiState as ReportsUiState.Success
-    LazyColumn(modifier.fillMaxSize(),
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
         item { ScreenHeader("Báo cáo", "Dòng tiền và hạn mức chi tiêu.") }
         item {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -149,8 +157,11 @@ fun ReportsContent(
                 Column(Modifier.fillMaxWidth().padding(24.dp)) {
                     Text("Chênh lệch thu chi", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(10.dp))
-                    Text(CurrencyUtils.formatVnd(state.netSavings), style = MaterialTheme.typography.displaySmall,
-                        color = if (state.netSavings >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                    Text(
+                        CurrencyUtils.formatVnd(state.netSavings),
+                        style = MaterialTheme.typography.displaySmall,
+                        color = if (state.netSavings >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    )
                     Spacer(Modifier.height(24.dp))
                     Row(Modifier.fillMaxWidth()) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -203,16 +214,26 @@ fun ReportsContent(
 
 @Composable
 private fun SpendingChart(items: List<CategorySpendingUiModel>, total: Long) {
-    val colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+    val colors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.error,
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+    )
     val description = items.joinToString(". ") { "${it.categoryName}: ${CurrencyUtils.formatVnd(it.amount)}" }
     Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(190.dp).semantics { contentDescription = description }) {
             var start = -90f
             items.forEachIndexed { index, item ->
                 val sweep = item.percentage.coerceIn(0f, 1f) * 360f
-                if (sweep > 0) drawArc(colors[index % colors.size], start, (sweep - 3f).coerceAtLeast(0.5f),
-                    useCenter = false, style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round))
+                if (sweep > 0) drawArc(
+                    colors[index % colors.size],
+                    start,
+                    (sweep - 3f).coerceAtLeast(0.5f),
+                    useCenter = false,
+                    style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round),
+                )
                 start += sweep
             }
         }
@@ -222,6 +243,7 @@ private fun SpendingChart(items: List<CategorySpendingUiModel>, total: Long) {
         }
     }
 }
+
 @Composable
 private fun CategorySpendingItem(
     item: CategorySpendingUiModel,

@@ -58,7 +58,10 @@ class FinancialAlertEngineTest {
                 categoryId = null, frequency = "MONTHLY", dayRule = 31, nextDueAt = due, remindBeforeDays = 1,
                 isActive = true, createdAt = due, updatedAt = due)
             val reminders = RoomReminderRepository(db)
-            val id = (reminders.upsert(reminder) as WriteResult.Success).value
+            val id = (reminders.upsert(reminder.toDomain()) as WriteResult.Success).value
+            assertEquals("Monthly bill", reminders.observeAll().first().single().name)
+            assertThrows(IllegalArgumentException::class.java) { reminder.copy(type = "INVALID").toDomain() }
+            assertThrows(IllegalArgumentException::class.java) { reminder.copy(frequency = "INVALID").toDomain() }
             assertEquals(WriteResult.Failure.INVALID_INPUT, reminders.upsert(reminder.copy(accountId = 999)))
             assertEquals(WriteResult.Failure.INVALID_INPUT, reminders.upsert(reminder.copy(amount = -1)))
             assertEquals(WriteResult.Failure.INVALID_INPUT, reminders.upsert(reminder.copy(frequency = "DAILY")))

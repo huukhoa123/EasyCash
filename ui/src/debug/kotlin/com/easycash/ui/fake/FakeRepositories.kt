@@ -351,3 +351,37 @@ class FakeDataManagementRepository : DataManagementRepository {
     override suspend fun exportCsv(): WriteResult<String> = csvResult
     override suspend fun clearAll(): WriteResult<Unit> = clearResult
 }
+
+
+class FakeReminderRepository(
+    initialReminders: List<com.easycash.domain.Reminder> = emptyList(),
+) : com.easycash.domain.ReminderRepository {
+    private val nextId = AtomicLong(initialReminders.maxOfOrNull { it.id }?.plus(1) ?: 1L)
+    private val reminders = MutableStateFlow(initialReminders)
+
+    override fun observeAll(): Flow<List<com.easycash.domain.Reminder>> = reminders.asStateFlow()
+
+    override suspend fun upsert(reminder: com.easycash.domain.Reminder): WriteResult<Long> {
+        val current = reminders.value.toMutableList()
+        val index = if (reminder.id == 0L) -1 else current.indexOfFirst { it.id == reminder.id }
+        val id = if (index >= 0) {
+            current[index] = reminder
+            reminder.id
+        } else {
+            val assignedId = if (reminder.id == 0L) nextId.getAndIncrement() else reminder.id
+            current.add(reminder.copy(id = assignedId))
+            assignedId
+        }
+        reminders.value = current
+        return WriteResult.Success(id)
+    }
+
+    override suspend fun delete(id: Long): WriteResult<Unit> {
+        val current = reminders.value.toMutableList()
+        val index = current.indexOfFirst { it.id == id }
+        if (index == -1) return WriteResult.Failure.NOT_FOUND
+        current.removeAt(index)
+        reminders.value = current
+        return WriteResult.Success(Unit)
+    }
+}

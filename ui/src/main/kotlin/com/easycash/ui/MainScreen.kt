@@ -28,6 +28,7 @@ import com.easycash.ui.accounts.AccountsViewModel
 import com.easycash.ui.home.HomeScreen
 import com.easycash.ui.home.HomeViewModel
 import com.easycash.ui.navigation.NavDestination
+import com.easycash.ui.reminders.RemindersViewModel
 import com.easycash.ui.reports.ReportsScreen
 import com.easycash.ui.reports.ReportsViewModel
 import com.easycash.ui.settings.SettingsScreen
@@ -143,7 +144,11 @@ fun MainScreen(
             }
             composable(NavDestination.Reports.route) {
                 val reportsViewModel: ReportsViewModel = hiltViewModel()
-                ReportsScreen(viewModel = reportsViewModel)
+                val remindersViewModel: RemindersViewModel = hiltViewModel()
+                ReportsScreen(
+                    viewModel = reportsViewModel,
+                    remindersViewModel = remindersViewModel,
+                )
             }
             composable(NavDestination.Accounts.route) {
                 val accountsViewModel: AccountsViewModel = hiltViewModel()

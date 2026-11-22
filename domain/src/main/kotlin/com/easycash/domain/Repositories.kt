@@ -51,6 +51,12 @@ interface NotificationSourceRepository {
     suspend fun linkAccount(id: Long, accountId: Long?): WriteResult<Unit>
 }
 
+interface ReminderRepository {
+    fun observeAll(): Flow<List<Reminder>>
+    suspend fun upsert(reminder: Reminder): WriteResult<Long>
+    suspend fun delete(id: Long): WriteResult<Unit>
+}
+
 interface StatsRepository {
     fun observeSummary(range: TimeRange): Flow<Summary>
     fun observeSpendingByCategory(range: TimeRange): Flow<List<CategorySpending>>

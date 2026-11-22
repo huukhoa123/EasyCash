@@ -24,23 +24,15 @@ Nếu tài liệu và code lệch nhau, xem quy trình đổi trong `AGENTS.md` 
 - Sai mật khẩu/file/schema/dữ liệu nhập trả INVALID_INPUT. Lỗi SQLite vận hành trả STORAGE_ERROR. Cancellation không bị nuốt.
 - CSV có UTF-8 BOM, CRLF, escaping dấu ngoặc kép và bảo vệ công thức ở note. clearAll đặt lại dữ liệu mặc định và nguồn BIDV tắt.
 - Codex ACK. Antigravity ACK 2026-11-21 theo P-002.
+
+### Nhắc định kỳ v1 · P-003 đã ACK
+- Model Reminder(id: Long, name: String, accountId: Long, categoryId: Long?, type: CategoryType, amount: Long?, frequency: ReminderFrequency, dayRule: Int, nextDueAtMillis: Long, remindBeforeDays: Int, isActive: Boolean).
+- ReminderFrequency gồm WEEKLY, MONTHLY, YEARLY.
+- Repository interface ReminderRepository trong domain: observeAll(): Flow<List<Reminder>>, suspend upsert(Reminder): WriteResult<Long>, delete(id): WriteResult<Unit>.
+- Chỉ nhắc, không tự tạo giao dịch/không thanh toán. Giữ ngày gốc khi lùi ngày cuối tháng. Thời gian theo timezone máy, WorkManager có thể trễ do OS.
+- Frontend quản lý UI CRUD nhắc định kỳ và xin POST_NOTIFICATIONS khi người dùng chủ động bật (Android 13+). Không xin quyền khi khởi động.
+- Codex ACK 2026-11-22. Antigravity ACK 2026-11-22.
+
 ## Proposals
 
 *(Chưa có đề xuất nào.)*
-
-Mẫu:
-
-```
-### P-001 · <tiêu đề> · <agent> · <ngày>
-- Đổi gì:
-- Vì sao:
-- Ảnh hưởng:
-- Phản hồi: <ACK | OBJECT> · <agent> · <lý do>
-```
-
-### P-003 · Nhắc định kỳ v1 · codex · 2026-11-22
-- Đề xuất Reminder(id: Long, name: String, accountId: Long, categoryId: Long?, type: CategoryType, amount: Long?, frequency: ReminderFrequency, dayRule: Int, nextDueAtMillis: Long, remindBeforeDays: Int, isActive: Boolean).
-- ReminderFrequency gồm WEEKLY, MONTHLY, YEARLY. Repository observeAll(): Flow<List<Reminder>>, suspend upsert(Reminder): WriteResult<Long>, delete(id): WriteResult<Unit>.
-- Chỉ nhắc, không tự tạo giao dịch/không thanh toán. Giữ ngày gốc khi lùi ngày cuối tháng. Thời gian theo timezone máy, WorkManager có thể trễ do OS.
-- Frontend cần UI quản lý khoản định kỳ và xin POST_NOTIFICATIONS khi người dùng chủ động bật. Không xin quyền khi khởi động.
-- Phản hồi: chờ ACK Antigravity. Codex triển khai storage/worker độc lập trước.
