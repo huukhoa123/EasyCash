@@ -708,3 +708,5 @@ Khoa chỉ kiểm tra bằng APK, không thể USB. Xác minh package BIDV qua t
 Thêm NotificationOutcome nội bộ data và thông báo Android chẩn đoán tạm thời, không đổi domain/contract/UI frontend. Trạng thái cố định, không chứa thông tin ngân hàng, không Logcat/mạng, OTP/ignored không phát chẩn đoán, ẩn nội dung màn hình khóa. Cần quyền gửi/kênh thông báo để thấy trạng thái; không thấy thông báo chưa đủ kết luận listener lỗi. Test xác minh nội dung tĩnh/visibility và regression replay.
 
 Build debug/release/testDebugUnitTest pass, 25 backend tests pass. APK versionCode4/1.0.0-rc.3, chữ ký giữ như rc.1/rc.2. Hướng dẫn RELEASE_1.0.0_RC3.md. Chưa nghiệm thu trên điện thoại, không khẳng định đã giải quyết nguyên nhân duy nhất. Khoa giữ thông báo BIDV, cài đè đúng APK và bật lại quyền đọc, gửi trạng thái chẩn đoán nếu còn lỗi. Không cần chuyển tiền mới.
+
+rc.3 đã công khai: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.3, source 5499236, CI 45042427895 success. Bốn asset digest đã đối chiếu. Chờ trạng thái chẩn đoán từ điện thoại Khoa; không có kết nối USB và chưa xác nhận lỗi thực tế đã hết.
