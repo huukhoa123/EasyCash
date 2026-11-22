@@ -21,8 +21,8 @@ android {
         applicationId = "com.easycash.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 3
-        versionName = "1.0.0-rc.2"
+        versionCode = 4
+        versionName = "1.0.0-rc.3"
     }
 
     val signingFile = rootProject.file(".signing/release.properties")

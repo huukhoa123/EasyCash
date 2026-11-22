@@ -19,7 +19,31 @@ import java.time.ZoneId
 @Config(sdk = [28], manifest = Config.NONE)
 class NotificationProcessorTest {
     @Test
-    fun `push without reference is recorded once and replay stays deduplicated after cleanup`() = runBlocking {
+    fun `notification seen before account linking can be replayed after linking`() = runBlocking<Unit> {
+        val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
+        try {
+            val sources = RoomNotificationSourceRepository(db, flowOf(true))
+            val source = sources.observeAll().first().single()
+            sources.setEnabled(source.id, true)
+            val processor = NotificationProcessor(db)
+            val push = javaClass.getResource("/notifications/bidv/push-debit.txt")!!.readText()
+            val zone = ZoneId.of("Asia/Ho_Chi_Minh")
+            assertEquals(NotificationOutcome.NO_ACCOUNT, processor.process(BidvNotificationParser.PACKAGE_NAME, 1, zone) { push })
+            val finance = RoomFinanceRepository(db)
+            assertTrue(finance.observe(TransactionFilter()).first().isEmpty())
+            val accountId = (finance.add(Account(0, "BIDV", AccountType.BANK, 100000, 100000, false)) as WriteResult.Success).value
+            sources.linkAccount(source.id, accountId)
+            assertEquals(NotificationOutcome.RECORDED, processor.process(BidvNotificationParser.PACKAGE_NAME, 1, zone) { push })
+            assertEquals(NotificationOutcome.ALREADY_RECORDED, processor.process(BidvNotificationParser.PACKAGE_NAME, 1, zone) { push })
+            assertEquals(1, finance.observe(TransactionFilter()).first().size)
+            assertEquals(1, db.notificationDao().events().size)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun `push without reference is recorded once and replay stays deduplicated after cleanup`() = runBlocking<Unit> {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
         try {
             val sources = RoomNotificationSourceRepository(db, flowOf(true))
@@ -46,7 +70,7 @@ class NotificationProcessorTest {
     }
 
     @Test
-    fun `whitelist otp concurrent dedup and review preserve privacy and balances`() = runBlocking {
+    fun `whitelist otp concurrent dedup and review preserve privacy and balances`() = runBlocking<Unit> {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
         try {
             val processor = NotificationProcessor(db)

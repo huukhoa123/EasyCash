@@ -16,6 +16,17 @@ class NotificationContentTest {
     private val fixture = javaClass.getResource("/notifications/bidv/debit.txt")!!.readText()
 
     @Test
+    fun `diagnostic notification contains only supplied status and hides lock screen contents`() {
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+        publishListenerDiagnostic(context, NotificationOutcome.NO_ACCOUNT.diagnosticMessage()!!)
+        val manager = context.getSystemService(android.app.NotificationManager::class.java)
+        val notice = org.robolectric.Shadows.shadowOf(manager).getNotification(7303)
+        assertEquals(Notification.VISIBILITY_SECRET, notice.visibility)
+        assertEquals(NotificationOutcome.NO_ACCOUNT.diagnosticMessage(), notice.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+        assertEquals(null, NotificationOutcome.IGNORED.diagnosticMessage())
+    }
+
+    @Test
     fun `sensitive short text cannot hide behind expanded transaction`() {
         for (key in listOf(Notification.EXTRA_TITLE, Notification.EXTRA_TEXT, Notification.EXTRA_SUB_TEXT, Notification.EXTRA_SUMMARY_TEXT)) {
             val notification = Notification().apply {

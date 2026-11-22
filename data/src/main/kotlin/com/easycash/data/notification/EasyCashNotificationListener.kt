@@ -28,6 +28,7 @@ class EasyCashNotificationListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        publishListenerDiagnostic(this, "Bộ đọc đã kết nối. Đang kiểm tra thông báo BIDV còn hiện.")
         activeNotifications.orEmpty().forEach { onNotificationPosted(it) }
     }
 
@@ -37,13 +38,19 @@ class EasyCashNotificationListener : NotificationListenerService() {
             try {
                 val processor = EntryPointAccessors.fromApplication(applicationContext, NotificationProcessorEntryPoint::class.java)
                     .notificationProcessor()
-                processor.process(sbn.packageName, sbn.postTime, ZoneId.systemDefault()) {
+                val outcome = processor.process(sbn.packageName, sbn.postTime, ZoneId.systemDefault()) {
                     notificationText(sbn.notification)
                 }
+                outcome.diagnosticMessage()?.let { publishListenerDiagnostic(this@EasyCashNotificationListener, it) }
             } catch (_: SQLiteException) {
-                // Không ghi log lỗi SQLite có thể chứa dữ liệu thông báo.
+                publishListenerDiagnostic(this@EasyCashNotificationListener, "Bộ đọc gặp lỗi lưu trữ. Không có nội dung ngân hàng trong chẩn đoán.")
             }
         }
+    }
+
+    override fun onListenerDisconnected() {
+        publishListenerDiagnostic(this, "Bộ đọc đã mất kết nối Android. Tắt/bật lại quyền đọc thông báo.")
+        super.onListenerDisconnected()
     }
 
     override fun onDestroy() {

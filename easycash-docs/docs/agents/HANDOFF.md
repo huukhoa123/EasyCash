@@ -700,3 +700,11 @@ Kiểm chứng sửa textLines: assembleDebug/testDebugUnitTest pass, 21 backend
 Listener đọc lại active notifications khi kết nối, vẫn kiểm tra whitelist/source enabled và OTP trước xử lý. Bản rc.2 versionCode3 giữ khóa bridge và release như rc.1; hướng dẫn RELEASE_1.0.0_RC2.md. Build debug/release/testDebugUnitTest pass, 23 backend tests không lỗi, chứng chỉ cả hai APK đúng như rc.1. Chưa nghiệm thu thiết bị thật, cần Khoa cập nhật đúng APK và bật lại quyền đọc để thử thông báo vẫn đang hiện, không cần chuyển tiền thêm.
 
 Phát hành rc.2: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.2 đã công khai Pre-release, source 688050b, CI 45041097132 success. Bốn asset digest khớp local, không đưa khóa ký lên GitHub. Chờ Khoa nghiệm thu thông báo còn đang hiện trên máy.
+
+### 2026-11-22 · codex · rc.2 chưa hoạt động trên máy Khoa, sửa replay và bổ sung chẩn đoán rc.3
+
+Khoa chỉ kiểm tra bằng APK, không thể USB. Xác minh package BIDV qua trang Google Play chính thức là com.vnpay.bidv. Chưa có bằng chứng runtime từ máy. Tái hiện bằng test thất bại: nhận thông báo khi source bật nhưng chưa link, insertEvent thành công rồi bỏ transaction; lần replay sau link gặp event trùng nên bị chặn. Sửa: chỉ transaction/durable receipt chặn ghi lại; journal event không chặn. Test hồi quy xác nhận NO_ACCOUNT -> RECORDED -> ALREADY_RECORDED, một event/một transaction.
+
+Thêm NotificationOutcome nội bộ data và thông báo Android chẩn đoán tạm thời, không đổi domain/contract/UI frontend. Trạng thái cố định, không chứa thông tin ngân hàng, không Logcat/mạng, OTP/ignored không phát chẩn đoán, ẩn nội dung màn hình khóa. Cần quyền gửi/kênh thông báo để thấy trạng thái; không thấy thông báo chưa đủ kết luận listener lỗi. Test xác minh nội dung tĩnh/visibility và regression replay.
+
+Build debug/release/testDebugUnitTest pass, 25 backend tests pass. APK versionCode4/1.0.0-rc.3, chữ ký giữ như rc.1/rc.2. Hướng dẫn RELEASE_1.0.0_RC3.md. Chưa nghiệm thu trên điện thoại, không khẳng định đã giải quyết nguyên nhân duy nhất. Khoa giữ thông báo BIDV, cài đè đúng APK và bật lại quyền đọc, gửi trạng thái chẩn đoán nếu còn lỗi. Không cần chuyển tiền mới.
