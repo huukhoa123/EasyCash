@@ -59,4 +59,4 @@ Các phase sau: theo spec mục 15.
 | T-021 | Backup mã hóa, restore nguyên tử, CSV, clearAll và validation dữ liệu nhập | codex | REVIEW | Test restore sạch/sai mật khẩu/file lỗi/rollback, build debug/release |
 | T-022 | Backend & UI nhắc định kỳ + cảnh báo ngân sách Android, migration v6, WorkManager | codex + antigravity | DONE | Test lịch/tháng/dedup/quyền, UI CRUD nhắc định kỳ, WorkManager, build debug/release pass |
 
-| T-023 | APK ký riêng, bản cập nhật chuyển dữ liệu và GitHub Pre-release theo Khoa | codex | IN_PROGRESS | Chứng chỉ/checksum, build/test, cài emulator, release assets |
+| T-023 | APK ký riêng, bản cập nhật chuyển dữ liệu và GitHub Pre-release theo Khoa | codex | DONE | Build/test, chữ ký/checksum, CI 45039121174 pass; Pre-release công khai. Emulator không kết nối, nghiệm thu máy thật còn chờ |

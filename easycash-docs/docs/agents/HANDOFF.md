@@ -676,3 +676,9 @@ Khoa duyệt phát hành bản thử có ký trước khi nghiệm thu ngân hà
 Build assembleDebug/assembleRelease/testDebugUnitTest/:domain:test pass. apksigner xác minh APK release v2 hợp lệ, không debuggable/INTERNET. Chứng chỉ bridge trùng bản thử cũ (3350a750...), release dùng khóa mới (26827f63...). Chuẩn bị hai APK và checksum/cert fingerprint, hướng dẫn chuyển dữ liệu trong RELEASE_1.0.0_RC1.md.
 
 Emulator không kết nối ở lượt này nên chưa smoke install APK mới. Chưa nghiệm thu push BIDV, MoMo chưa hỗ trợ parser, quyền Android13+ và chuyển backup trên máy người dùng. Không yêu cầu giao dịch chỉ để test. Chưa chốt stable v1.
+
+### 2026-11-22 · codex · đã công khai Pre-release v1.0.0-rc.1
+
+Release: https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.1, prerelease=true/draft=false, source 08b748ef40144579b3757ce2b4948e89a255775f. CI 45039121174 success. Hai APK cùng SHA256SUMS.txt/SIGNING-CERTIFICATES.txt đã tải lên, digest API của cả 4 assets khớp local. T-023 hoàn tất phạm vi đóng gói/phát hành thử.
+
+Khoa đang có dữ liệu dùng backup-bridge để cập nhật khóa cũ, không gỡ app. Chỉ chuyển sang khóa release sau khi kiểm tra khôi phục backup; có thể nghiệm thu ngân hàng ngay trên bridge. Chưa nghiệm thu máy thật/Android13+/push, MoMo chưa có parser. Không coi là stable. Khóa ký và mật khẩu chỉ ở .signing/ ignored, chủ máy cần sao lưu riêng.
