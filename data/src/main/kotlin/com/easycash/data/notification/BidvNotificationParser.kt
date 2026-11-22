@@ -17,7 +17,7 @@ sealed interface BidvParseResult {
 object BidvNotificationParser {
     const val VERSION = 2
     const val PACKAGE_NAME = "com.vnpay.bidv"
-    private val sensitive = Regex("otp|mã xác thực|mã bảo mật|mật khẩu|password|verification|one.time", RegexOption.IGNORE_CASE)
+    private val sensitive = Regex("otp|mã xác thực|mã xác minh|mã bảo mật|mật khẩu|password|verification|one.time", RegexOption.IGNORE_CASE)
     private val failed = Regex("thất bại|không thành công|khuyến mãi", RegexOption.IGNORE_CASE)
     private val money = Regex("([+-])([1-9][0-9]{0,2}(?:,[0-9]{3})*|[1-9][0-9]*) VND")
     private val dateFormat = DateTimeFormatter.ofPattern("HH:mm dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT)

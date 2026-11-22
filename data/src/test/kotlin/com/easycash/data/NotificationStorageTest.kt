@@ -22,7 +22,7 @@ class NotificationStorageTest {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
         try {
             val repository = RoomNotificationSourceRepository(db, flowOf(false))
-            val source = repository.observeAll().first().single()
+            val source = repository.observeAll().first().single { it.packageName == "com.vnpay.bidv" }
             assertFalse(source.isEnabled)
             assertFalse(repository.observeAccessGranted().first())
             assertEquals(WriteResult.Success(Unit), repository.setEnabled(source.id, true))
@@ -30,8 +30,8 @@ class NotificationStorageTest {
             val finance = RoomFinanceRepository(db)
             val account = (finance.add(Account(0, "Ngân hàng", AccountType.BANK, 0, 0, false)) as WriteResult.Success).value
             assertEquals(WriteResult.Success(Unit), repository.linkAccount(source.id, account))
-            assertEquals(account, repository.observeAll().first().single().linkedAccountId)
-            assertTrue(repository.observeAll().first().single().isEnabled)
+            assertEquals(account, repository.observeAll().first().single { it.packageName == "com.vnpay.bidv" }.linkedAccountId)
+            assertTrue(repository.observeAll().first().single { it.packageName == "com.vnpay.bidv" }.isEnabled)
             finance.archive(account)
             assertEquals(WriteResult.Failure.INVALID_INPUT, repository.linkAccount(source.id, account))
             assertEquals(WriteResult.Success(Unit), repository.linkAccount(source.id, null))

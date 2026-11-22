@@ -61,5 +61,7 @@ Các phase sau: theo spec mục 15.
 
 | T-023 | APK ký riêng, bản cập nhật chuyển dữ liệu và GitHub Pre-release theo Khoa | codex | DONE | Build/test, chữ ký/checksum, CI 45039121174 pass; Pre-release công khai. Emulator không kết nối, nghiệm thu máy thật còn chờ |
 
-| T-024 | Thiết kế lại UI sáng, tinh gọn và cao cấp theo UI_REFRESH_LIGHT.md | antigravity | READY | 5 tab light/dark, ảnh trước/sau, màn nhỏ/font lớn, build/test |
+| T-024 | Thiết kế lại UI sáng, tinh gọn và cao cấp theo UI_REFRESH_LIGHT.md | antigravity | IN_PROGRESS | 5 tab light/dark, ảnh trước/sau, màn nhỏ/font lớn, build/test |
 | T-025 | Tự ghi nhận thông báo rõ ràng và học danh mục từ giao dịch đã phân loại | codex | TODO | Không xác nhận lại mẫu rõ, chống trùng, phân biệt giao dịch mới tương tự |
+
+| T-026 | Nguồn Timo, parser nhận tiền từ mẫu thật, whitelist/backup/test | codex | REVIEW | Parser fixture, OTP, chống trùng, nguồn tắt và restore; chưa nghiệm thu điện thoại |

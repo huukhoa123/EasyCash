@@ -19,11 +19,51 @@ import java.time.ZoneId
 @Config(sdk = [28], manifest = Config.NONE)
 class NotificationProcessorTest {
     @Test
+    fun `Timo whitelist credit dedup and source isolation`() = runBlocking<Unit> {
+        val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
+        try {
+            val sources = RoomNotificationSourceRepository(db, flowOf(true))
+            val source = sources.observeAll().first().single { it.packageName == TimoNotificationParser.PACKAGE_NAME }
+            assertFalse(source.isEnabled)
+            val processor = NotificationProcessor(db)
+            val zone = ZoneId.of("UTC")
+            assertEquals(NotificationOutcome.SOURCE_DISABLED, processor.process(source.packageName, 1, zone) { error("Disabled source must not read text") })
+            val finance = RoomFinanceRepository(db)
+            val accountId = (finance.add(Account(0, "Timo", AccountType.BANK, 0, 0, false)) as WriteResult.Success).value
+            assertEquals(WriteResult.Success(Unit), sources.setEnabled(source.id, true))
+            sources.linkAccount(source.id, accountId)
+            val fixture = javaClass.getResource("/notifications/timo/credit.txt")!!.readText()
+            assertEquals(NotificationOutcome.RECORDED, processor.process(source.packageName, 1, zone) { fixture })
+            assertEquals(NotificationOutcome.ALREADY_RECORDED, processor.process(source.packageName, 2, zone) { fixture })
+            assertEquals(NotificationOutcome.UNKNOWN_FORMAT, processor.process(source.packageName, 3, zone) { javaClass.getResource("/notifications/bidv/debit.txt")!!.readText() })
+            val transaction = finance.observe(TransactionFilter()).first().single()
+            assertEquals(TransactionType.INCOME, transaction.type)
+            assertEquals(10000L, transaction.amount)
+            assertEquals(0L, finance.observeAll().first().single().estimatedBalance)
+            finance.confirm(transaction.id)
+            assertEquals(10000L, finance.observeAll().first().single().estimatedBalance)
+            val backup = RoomDataManagementRepository(db)
+            val password = "test-password-only".toCharArray()
+            try {
+                val exported = (backup.exportBackup(password) as WriteResult.Success).value
+                assertEquals(WriteResult.Success(Unit), backup.restoreBackup(exported, password))
+                val restored = sources.observeAll().first().single { it.packageName == TimoNotificationParser.PACKAGE_NAME }
+                assertFalse(restored.isEnabled)
+                assertEquals(accountId, restored.linkedAccountId)
+            } finally { password.fill('\u0000') }
+            backup.clearAll()
+            val reset = sources.observeAll().first()
+            assertEquals(2, reset.size)
+            assertTrue(reset.none { it.isEnabled || it.linkedAccountId != null })
+        } finally { db.close() }
+    }
+
+    @Test
     fun `notification seen before account linking can be replayed after linking`() = runBlocking<Unit> {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
         try {
             val sources = RoomNotificationSourceRepository(db, flowOf(true))
-            val source = sources.observeAll().first().single()
+            val source = sources.observeAll().first().single { it.packageName == BidvNotificationParser.PACKAGE_NAME }
             sources.setEnabled(source.id, true)
             val processor = NotificationProcessor(db)
             val push = javaClass.getResource("/notifications/bidv/push-debit.txt")!!.readText()
@@ -47,7 +87,7 @@ class NotificationProcessorTest {
         val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), EasyCashDatabase::class.java).build()
         try {
             val sources = RoomNotificationSourceRepository(db, flowOf(true))
-            val source = sources.observeAll().first().single()
+            val source = sources.observeAll().first().single { it.packageName == BidvNotificationParser.PACKAGE_NAME }
             val finance = RoomFinanceRepository(db)
             val accountId = (finance.add(Account(0, "BIDV", AccountType.BANK, 100000, 100000, false)) as WriteResult.Success).value
             sources.linkAccount(source.id, accountId)
@@ -78,7 +118,7 @@ class NotificationProcessorTest {
             val packageName = BidvNotificationParser.PACKAGE_NAME
             processor.process("untrusted", 1, zone) { error("Must not read untrusted content") }
             val sources = RoomNotificationSourceRepository(db, flowOf(true))
-            val source = sources.observeAll().first().single()
+            val source = sources.observeAll().first().single { it.packageName == BidvNotificationParser.PACKAGE_NAME }
             processor.process(packageName, 1, zone) { error("Must not read disabled content") }
             sources.setEnabled(source.id, true)
             processor.process(packageName, 1, zone) { "Mã xác thực giả 123456" }

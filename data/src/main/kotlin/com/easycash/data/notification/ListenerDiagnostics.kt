@@ -5,15 +5,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 
-// Temporary on-device diagnostics for BIDV acceptance; remove after real-device verification.
+// Temporary on-device diagnostics for bank acceptance; remove after real-device verification.
 internal fun publishListenerDiagnostic(context: Context, message: String) {
     val manager = context.getSystemService(NotificationManager::class.java)
     if (!manager.areNotificationsEnabled()) return
     val channel = "bidv_diagnostics"
-    manager.createNotificationChannel(NotificationChannel(channel, "Kiểm tra nhận BIDV", NotificationManager.IMPORTANCE_LOW))
+    manager.createNotificationChannel(NotificationChannel(channel, "Kiểm tra nhận ngân hàng", NotificationManager.IMPORTANCE_LOW))
     val notification = Notification.Builder(context, channel)
         .setSmallIcon(android.R.drawable.ic_dialog_info)
-        .setContentTitle("EasyCash — kiểm tra BIDV")
+        .setContentTitle("EasyCash — kiểm tra ngân hàng")
         .setContentText(message)
         .setStyle(Notification.BigTextStyle().bigText(message))
         .setOnlyAlertOnce(true)

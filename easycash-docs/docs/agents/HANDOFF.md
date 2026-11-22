@@ -730,3 +730,15 @@ Khoa thấy UI hiện tại chưa ấn tượng, chọn “Sáng, tinh gọn và
 Antigravity nhận T-024 READY và triển khai theo brief; gửi ảnh trước/sau, các trạng thái dữ liệu thật, build/test rồi Codex tích hợp APK. Chỉ giao tiếp qua file, chưa gọi hoặc xác nhận Antigravity đang chạy.
 
 Ghi riêng T-025 TODO để không mất yêu cầu chức năng trước khi chuyển UI: thông báo rõ tự ghi nhận và học danh mục giao dịch mới tương tự, không phải yêu cầu bỏ chống trùng. Chưa triển khai/hay thay contract các hành vi đó; không gắn nhãn UI giả như đã có.
+
+### 2026-11-22 · codex · thêm nguồn Timo theo yêu cầu Khoa
+
+Ảnh Khoa xác minh push nhận tiền Timo; không đưa ảnh/OTP/thông tin cá nhân vào Git. Package io.lifestyle.plus xác minh từ Google Play https://play.google.com/store/apps/details?id=io.lifestyle.plus. Không đọc email Gmail Timo Support, không mở whitelist Gmail/Zalo. Parser chỉ hỗ trợ mẫu tăng tiền với dấu chấm, giờ VN; mẫu trừ tiền chưa có nên không đoán.
+
+Thêm TimoNotificationParser và SupportedNotificationSources; seed hai nguồn mặc định tắt, bật/link qua repository cũ; listener dispatch theo package và parserVersion, clearAll seed cả hai. Không đổi domain/schema/contract. Diagnostic dùng tên ngân hàng phù hợp. Fixture thay toàn bộ thông tin giả. Test parser định dạng/overflow/date/truncated/OTP và processor bật-tắt/link/dedup/cách ly BIDV, backup restore tắt nguồn và clearAll.
+
+:data:assembleDebug/:data:testDebugUnitTest pass. Đang chạy thêm assembleDebug/testDebugUnitTest toàn app để kiểm tra tích hợp. UI/MainActivity của Antigravity đang có thay đổi chưa commit; không đóng gói/phát hành APK chứa giao diện dở dang. T-024 vẫn Antigravity; nhờ giữ màn Cài đặt hiển thị nguồn động từ repository, không hardcode chỉ BIDV. Timo chưa nghiệm thu máy thật, chưa có trong APK rc.4 đã phát hành. Chi tiết docs/TIMO_NOTIFICATIONS.md. T-025 tự ghi nhận/học danh mục chưa được triển khai bởi task này.
+
+Kết quả tích hợp lượt này: assembleDebug/testDebugUnitTest toàn app FAILED tại UI đang sửa: ReportsScreen.kt:466 unresolved progress; SettingsScreen.kt:515 unresolved FilledTonalButton và lỗi Composable kéo theo. Antigravity cần sửa trước build APK. Codex không sửa vùng UI. Rerun riêng data sau bổ sung lọc 'mã xác minh'.
+
+Kiểm chứng cuối: build/test data trong output riêng build/timo-verification bằng init script, không dùng cache/incremental, BUILD SUCCESSFUL; 28 backend tests pass. Build thường trước đó gặp lỗi metadata/KSP khi output dùng chung; không sửa source migration để che lỗi cache. Chỉ commit backend Timo và tài liệu, giữ nguyên toàn bộ thay đổi UI/MainActivity của Antigravity. Chưa phát hành APK mới.

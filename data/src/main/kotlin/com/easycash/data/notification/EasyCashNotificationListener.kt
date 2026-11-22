@@ -28,12 +28,12 @@ class EasyCashNotificationListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        publishListenerDiagnostic(this, "Bộ đọc đã kết nối. Đang kiểm tra thông báo BIDV còn hiện.")
+        publishListenerDiagnostic(this, "Bộ đọc đã kết nối. Đang kiểm tra thông báo ngân hàng còn hiện.")
         activeNotifications.orEmpty().forEach { onNotificationPosted(it) }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        if (sbn.packageName != BidvNotificationParser.PACKAGE_NAME) return
+        if (!SupportedNotificationSources.supports(sbn.packageName)) return
         scope.launch {
             try {
                 val processor = EntryPointAccessors.fromApplication(applicationContext, NotificationProcessorEntryPoint::class.java)
@@ -41,7 +41,8 @@ class EasyCashNotificationListener : NotificationListenerService() {
                 val outcome = processor.process(sbn.packageName, sbn.postTime, ZoneId.systemDefault()) {
                     notificationText(sbn.notification)
                 }
-                outcome.diagnosticMessage()?.let { publishListenerDiagnostic(this@EasyCashNotificationListener, it) }
+                val bank = if (sbn.packageName == TimoNotificationParser.PACKAGE_NAME) "Timo" else "BIDV"
+                outcome.diagnosticMessage()?.replace("BIDV", bank)?.let { publishListenerDiagnostic(this@EasyCashNotificationListener, it) }
             } catch (_: SQLiteException) {
                 publishListenerDiagnostic(this@EasyCashNotificationListener, "Bộ đọc gặp lỗi lưu trữ. Không có nội dung ngân hàng trong chẩn đoán.")
             }

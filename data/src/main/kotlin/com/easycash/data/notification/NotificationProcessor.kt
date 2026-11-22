@@ -19,12 +19,13 @@ class NotificationProcessor(private val database: EasyCashDatabase) {
         database.notificationDao().deleteExpired(System.currentTimeMillis())
     }
     suspend fun process(packageName: String, postedAt: Long, zone: ZoneId, readText: () -> String): NotificationOutcome {
-        if (packageName != BidvNotificationParser.PACKAGE_NAME) return NotificationOutcome.IGNORED
+        if (!SupportedNotificationSources.supports(packageName)) return NotificationOutcome.IGNORED
         return database.withTransaction {
             val dao = database.notificationDao()
             val source = dao.enabledSource(packageName) ?: return@withTransaction NotificationOutcome.SOURCE_DISABLED
             val text = readText()
-            val result = BidvNotificationParser.parse(text, zone)
+            val result = if (packageName == TimoNotificationParser.PACKAGE_NAME) TimoNotificationParser.parse(text) else BidvNotificationParser.parse(text, zone)
+            val parserVersion = if (packageName == TimoNotificationParser.PACKAGE_NAME) TimoNotificationParser.VERSION else BidvNotificationParser.VERSION
             if (result == BidvParseResult.Ignored) return@withTransaction NotificationOutcome.IGNORED
             val now = System.currentTimeMillis()
             dao.deleteExpired(now)
@@ -35,7 +36,7 @@ class NotificationProcessor(private val database: EasyCashDatabase) {
             if (parsed != null && (dao.transactionCount(parsed.dedupKey) > 0 || dao.receiptCount(parsed.dedupKey) > 0)) return@withTransaction NotificationOutcome.ALREADY_RECORDED
             dao.insertEvent(NotificationEventEntity(sourceId = source.id, postedAt = postedAt,
                 fingerprint = fingerprint, classification = if (parsed == null) "UNKNOWN" else "TRANSACTION_SUCCESS",
-                parseStatus = if (parsed == null) "PARSE_FAILED" else "PARSED", parserVersion = BidvNotificationParser.VERSION,
+                parseStatus = if (parsed == null) "PARSE_FAILED" else "PARSED", parserVersion = parserVersion,
                 expiresAt = now + 30L * 24 * 60 * 60 * 1000, createdAt = now))
             // An existing event may have arrived before account linking; only receipts block replay.
             if (parsed == null) return@withTransaction NotificationOutcome.UNKNOWN_FORMAT

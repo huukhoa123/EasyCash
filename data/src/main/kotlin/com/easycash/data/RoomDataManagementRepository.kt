@@ -8,8 +8,6 @@ import android.database.sqlite.SQLiteConstraintException
 import androidx.room.withTransaction
 import com.easycash.data.local.DefaultCategories
 import com.easycash.data.local.EasyCashDatabase
-import com.easycash.data.local.NotificationSourceEntity
-import com.easycash.data.notification.BidvNotificationParser
 import com.easycash.domain.DataManagementRepository
 import com.easycash.domain.WriteResult
 import kotlinx.coroutines.Dispatchers
@@ -134,10 +132,9 @@ class RoomDataManagementRepository(private val database: EasyCashDatabase) : Dat
             db.execSQL("DELETE FROM sqlite_sequence")
             DefaultCategories.onOpen(db)
             val now = System.currentTimeMillis()
-            database.notificationDao().insertSource(NotificationSourceEntity(
-                packageName = BidvNotificationParser.PACKAGE_NAME, displayName = "BIDV SmartBanking",
-                parserId = "bidv-v1", createdAt = now, updatedAt = now,
-            ))
+            com.easycash.data.notification.SupportedNotificationSources.defaults(now).forEach {
+                database.notificationDao().insertSource(it)
+            }
         }
         WriteResult.Success(Unit)
     }
