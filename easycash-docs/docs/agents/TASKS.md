@@ -58,3 +58,5 @@ Các phase sau: theo spec mục 15.
 | T-020 | Thiết kế lại toàn bộ UX/UI cao cấp, nhất quán, tối ưu dùng cá nhân | antigravity | DONE | Kiểm tra 5 tab, dialogs, Dark/Light, SAF P-002, ảnh emulator, unit tests pass 100% |
 | T-021 | Backup mã hóa, restore nguyên tử, CSV, clearAll và validation dữ liệu nhập | codex | REVIEW | Test restore sạch/sai mật khẩu/file lỗi/rollback, build debug/release |
 | T-022 | Backend & UI nhắc định kỳ + cảnh báo ngân sách Android, migration v6, WorkManager | codex + antigravity | DONE | Test lịch/tháng/dedup/quyền, UI CRUD nhắc định kỳ, WorkManager, build debug/release pass |
+
+| T-023 | APK ký riêng, bản cập nhật chuyển dữ liệu và GitHub Pre-release theo Khoa | codex | IN_PROGRESS | Chứng chỉ/checksum, build/test, cài emulator, release assets |

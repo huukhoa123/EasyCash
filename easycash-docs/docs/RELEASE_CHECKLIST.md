@@ -1,6 +1,6 @@
 # Nghiệm thu và chuyển dữ liệu v1
 
-Chưa phát hành stable v1. Build release hiện chưa ký; không dùng APK unsigned để cài trên điện thoại.
+Chưa phát hành stable v1. Khoa đã duyệt phát hành Pre-release có ký trước khi nghiệm thu máy thật; xem RELEASE_1.0.0_RC1.md. CI không có khóa riêng vẫn build unsigned và không dùng APK đó để cài.
 
 ## Điều kiện trước khi phát hành
 
@@ -10,7 +10,7 @@ Chưa phát hành stable v1. Build release hiện chưa ký; không dùng APK un
 - [ ] Nghiệm thu trên Android 13+: từ chối/cấp/thu hồi quyền gửi thông báo; nhập tay vẫn dùng được.
 - [ ] Nghiệm thu thông báo BIDV thật: nhận đúng chiều/số tiền, thông báo lặp không tạo thêm giao dịch, số dư chỉ đổi sau xác nhận.
 - [ ] Có mẫu MoMo đã che dữ liệu, parser và test tương ứng. Không đoán định dạng thông báo.
-- [ ] Tạo và lưu giữ khóa ký riêng cùng mật khẩu ngoài Git; cấu hình ký và tăng version trước khi phát hành.
+- [x] Tạo khóa ký riêng cùng mật khẩu trong .signing/ bị Git bỏ qua, giới hạn quyền truy cập; cấu hình ký và tăng version 1.0.0-rc.1 (2). Chủ máy cần sao lưu khóa riêng an toàn.
 - [ ] Kiểm tra chuyển dữ liệu từ bản thử trên điện thoại theo quy trình dưới đây.
 - [ ] CI của đúng commit phát hành thành công; ghi commit, checksum và chứng chỉ ký của APK trong release notes.
 

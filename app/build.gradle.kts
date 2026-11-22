@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -20,8 +21,20 @@ android {
         applicationId = "com.easycash.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "1.0.0-rc.1"
+    }
+
+    val signingFile = rootProject.file(".signing/release.properties")
+    if (signingFile.exists()) {
+        val signing = Properties().apply { signingFile.inputStream().use { load(it) } }
+        val releaseSigning = signingConfigs.create("privateRelease") {
+            storeFile = rootProject.file(requireNotNull(signing.getProperty("storeFile")))
+            storePassword = requireNotNull(signing.getProperty("storePassword"))
+            keyAlias = requireNotNull(signing.getProperty("keyAlias"))
+            keyPassword = requireNotNull(signing.getProperty("keyPassword"))
+        }
+        buildTypes.getByName("release").signingConfig = releaseSigning
     }
 
     buildFeatures {

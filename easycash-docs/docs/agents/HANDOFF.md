@@ -668,3 +668,11 @@ otification_events, cài đặt RoomNotificationSourceRepository.
 ### 2026-11-22 · codex · sửa tải dependency Robolectric trên CI
 
 CI 45003820856 thất bại vì repo1.maven.org trả HTTP 429 cho android-all-instrumented, không phải assertion nghiệp vụ. Đặt robolectric.dependency.repo.url sang https://repo.maven.apache.org/maven2 trong cấu hình Test của :data. Endpoint trả HTTP 200; chạy lại :data:testDebugUnitTest thành công. Không thay đổi dependency hay bỏ test.
+
+### 2026-11-22 · codex · chuẩn bị Pre-release 1.0.0-rc.1 theo Khoa
+
+Khoa duyệt phát hành bản thử có ký trước khi nghiệm thu ngân hàng. Tạo RSA3072 trong .signing/ (ignored, ACL riêng chủ máy), cấu hình Gradle đọc release.properties khi có; CI không có khóa vẫn build unsigned. Tăng versionCode=2/versionName=1.0.0-rc.1. Chủ máy cần sao lưu thư mục khóa riêng an toàn, không đưa lên GitHub.
+
+Build assembleDebug/assembleRelease/testDebugUnitTest/:domain:test pass. apksigner xác minh APK release v2 hợp lệ, không debuggable/INTERNET. Chứng chỉ bridge trùng bản thử cũ (3350a750...), release dùng khóa mới (26827f63...). Chuẩn bị hai APK và checksum/cert fingerprint, hướng dẫn chuyển dữ liệu trong RELEASE_1.0.0_RC1.md.
+
+Emulator không kết nối ở lượt này nên chưa smoke install APK mới. Chưa nghiệm thu push BIDV, MoMo chưa hỗ trợ parser, quyền Android13+ và chuyển backup trên máy người dùng. Không yêu cầu giao dịch chỉ để test. Chưa chốt stable v1.
