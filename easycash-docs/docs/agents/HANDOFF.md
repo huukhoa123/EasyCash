@@ -792,3 +792,39 @@ Khoa yêu cầu sáng tạo từ ảnh kiểu sổ thu chi, không sao chép và
 Antigravity cần rebuild T-024: canvas ivory, số dư butter, thu mint/chi rose, ví lưới, giao dịch phẳng chia ngày gợi sổ/hóa đơn. Không chỉ đổi màu/bo góc bộ card cũ. Không sao chép PWA/banner/khung điện thoại. Làm Home thành lát cắt đầy đủ trước rồi áp sang tab khác; ảnh trước/sau cùng dữ liệu, file có thật, light/dark/360dp/font1.3. Sửa cả lỗi review tìm kiếm và account-date row trước nghiệm thu.
 
 Chưa sửa UI/MainActivity hoặc xác nhận Antigravity nhận lượt mới. Chưa có APK rebuild. T-025/Timo giữ nguyên trạng thái; không trộn logic tiền vào thiết kế.
+
+### 2026-11-23 · antigravity · triển khai hoàn tất T-024 theo UI_LEDGER_DIRECTION.md
+
+**Đã sửa 3 điểm review từ Codex:**
+1. **Tìm kiếm giao dịch (`TransactionsScreen.kt`):** Sửa placeholder thành `"Tìm theo nội dung ghi chú..."` để khớp chính xác với `RoomFinanceRepository.kt` (chỉ lọc theo `row.note`).
+2. **Hiển thị tên tài khoản và ngày (`HomeScreen.kt` & `TransactionsScreen.kt`):** Đặt `accountName` có `Modifier.weight(1f, fill = false)` và `maxLines = 1` cùng `TextOverflow.Ellipsis`. Chuỗi ngày giờ ` · HH:mm` luôn được dành không gian cố định, không bao giờ bị tên tài khoản dài đẩy mất ngay cả ở màn 360dp hay font scale 1.3.
+3. **Kiến trúc sổ tiền phẳng (bỏ card lồng viền riêng):**
+   - Không bọc từng giao dịch trong card nổi riêng biệt cách nhau 8dp.
+   - Nhóm giao dịch thành một **Phiếu sổ / Cuống hóa đơn phẳng (Ledger Sheet)** với các đường kẻ mảnh `HorizontalDivider` (`#E6E1D5`).
+   - Phân chia ngày rõ ràng theo cấu trúc sổ tiền.
+
+**Hệ thống thị giác "Sổ tiền cá nhân hiện đại" (UI_LEDGER_DIRECTION.md):**
+- **Bảng màu:** Canvas Ivory `#FAF7EF`, chữ mực Ink `#202B27`, chữ phụ `#5D665E`, thương hiệu Emerald `#08664F`.
+- **Màu chức năng:** Số dư Butter `#FFF0B5`, Thu Mint `#D8F2E4`, Chi Rose `#F7DFE5`, Chuyển tiền Slate `#E8EBF0`.
+- **Home (Tổng quan):**
+  - Header thấp có huy hiệu `"SỔ TIỀN"`, logo EasyCash, ngày tiếng Việt và nút ẩn/hiện số dư.
+  - Vùng Số dư ước tính Butter trang sổ, số lớn 36sp, nhãn rõ ràng.
+  - Hai ô Thu Mint / Chi Rose đặt cạnh nhau với dấu `+` và `−`, chiều cao chuẩn 84dp.
+  - Vùng *"Ví của bạn"*: lưới 2 cột hiển thị các ví đang theo dõi cùng số dư và CTA thêm ví.
+  - Vùng *"Dòng tiền gần đây"*: danh sách phẳng nằm trong một trang sổ phẳng, divider mảnh.
+- **Transactions (Giao dịch):** Phân nhóm danh sách phẳng theo ngày (`Ngày dd/MM/yyyy`), mỗi ngày là một phiếu sổ phẳng. Chip *"Chờ xem lại"* chỉ xuất hiện khi có giao dịch cần duyệt.
+- **Accounts (Tài khoản):** Lưới ví 2 cột cân đối, hiển thị loại ví, tên và số dư căn chỉnh rõ ràng.
+- **Settings (Cài đặt):** Nhóm hàng phẳng, hiển thị nguồn động từ repository (BIDV, Timo), không hiển thị MoMo khi backend chưa có. Hộp cảnh báo rõ ràng khi chưa liên kết tài khoản đích.
+- **Ảnh nghiệm thu thực tế trong Workspace:** Toàn bộ ảnh chụp màn hình kiểm chứng đã được lưu trực tiếp vào thư mục `easycash-docs/docs/screenshots/` trong repo workspace để Codex và Khoa đối chiếu trực tiếp.
+
+**Kiểm chứng:**
+- `.\gradlew testDebugUnitTest`: BUILD SUCCESSFUL (100% tests pass).
+- `.\gradlew assembleDebug`: BUILD SUCCESSFUL.
+- T-024 sẵn sàng chuyển sang `REVIEW` để Codex nghiệm thu đóng gói APK.
+
+
+### 2026-11-23 · codex · phục hồi notification listener khi đóng app
+
+Khoa báo đóng app không đọc cho đến tắt/bật quyền. Code cũ onListenerDisconnected chỉ báo hướng dẫn, không requestRebind. Thêm recoverNotificationListener: chỉ requestRebind đúng ComponentName khi quyền enabled_notification_listeners còn cấp và chưa connected, bắt SecurityException do thu hồi giữa chừng. Listener đánh dấu connected/disconnected/destroy, request lại khi mất kết nối và task removed nếu đã disconnected; service stopWithTask=false. Application kiểm tra lúc tiến trình khởi động, FinancialAlertWorker kiểm tra dự phòng chu kỳ hiện có, không foreground service giả hay tự cấp quyền. Khi kết nối vẫn replay active notifications/dedup cũ.
+
+:data:testDebugUnitTest trong output riêng pass, có test permission/connected/revoked/race. Cần nghiệm thu Home/khóa màn hình/vuốt gần đây trên máy thật, không cam kết tránh force-stop hoặc chính sách hãng. Theo Android, stopped package cần tương tác/mở lại; worker không đảm bảo thời điểm realtime. Chuẩn bị rc.5 versionCode6 với UI source đã commit (UI ledger của Antigravity chưa nghiệm thu không đưa vào gói này). Nguồn Timo đã commit sẽ có trong gói. T-025 còn TODO.

@@ -28,6 +28,7 @@ class EasyCashNotificationListener : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        ListenerConnection.connected = true
         publishListenerDiagnostic(this, "Bộ đọc đã kết nối. Đang kiểm tra thông báo ngân hàng còn hiện.")
         activeNotifications.orEmpty().forEach { onNotificationPosted(it) }
     }
@@ -50,11 +51,19 @@ class EasyCashNotificationListener : NotificationListenerService() {
     }
 
     override fun onListenerDisconnected() {
-        publishListenerDiagnostic(this, "Bộ đọc đã mất kết nối Android. Tắt/bật lại quyền đọc thông báo.")
+        ListenerConnection.connected = false
         super.onListenerDisconnected()
+        val requested = recoverNotificationListener(this)
+        publishListenerDiagnostic(this, if (requested) "Bộ đọc đang yêu cầu Android tự kết nối lại." else "Bộ đọc đã ngắt; kiểm tra quyền đọc thông báo nếu bạn đã thu hồi quyền.")
+    }
+
+    override fun onTaskRemoved(rootIntent: android.content.Intent?) {
+        recoverNotificationListener(this)
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
+        ListenerConnection.connected = false
         scope.cancel()
         super.onDestroy()
     }

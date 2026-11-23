@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class FinancialAlertWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
+        recoverNotificationListener(applicationContext)
         return try {
             val database = EntryPointAccessors.fromApplication(applicationContext, NotificationProcessorEntryPoint::class.java).database()
             FinancialAlertEngine(database).check(System.currentTimeMillis(), ZoneId.systemDefault(), ::publish)

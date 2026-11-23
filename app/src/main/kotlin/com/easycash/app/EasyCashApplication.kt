@@ -7,6 +7,7 @@ import dagger.hilt.android.HiltAndroidApp
 class EasyCashApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        com.easycash.data.notification.recoverNotificationListener(this)
         com.easycash.data.notification.scheduleFinancialAlerts(this)
     }
 }
