@@ -1,57 +1,21 @@
 package com.easycash.ui.transactions
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.style.TextOverflow
-import com.easycash.ui.components.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,15 +23,13 @@ import com.easycash.domain.Account
 import com.easycash.domain.Category
 import com.easycash.domain.CategoryType
 import com.easycash.domain.Transaction
-import com.easycash.domain.TransactionOrigin
 import com.easycash.domain.TransactionStatus
 import com.easycash.domain.TransactionType
-import com.easycash.ui.theme.EasyCashTheme
-import com.easycash.ui.theme.ExpenseDark
-import com.easycash.ui.theme.IncomeDark
-import com.easycash.ui.theme.WarningDark
+import com.easycash.ui.components.*
+import com.easycash.ui.theme.*
 import com.easycash.ui.util.CategoryMatcher
 import com.easycash.ui.util.CurrencyUtils
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -211,6 +173,7 @@ fun TransactionsContent(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             if (uiState is TransactionsUiState.Success && uiState.transactions.isNotEmpty()) {
@@ -218,6 +181,7 @@ fun TransactionsContent(
                     onClick = onAddClick,
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     AppIcon(Glyph.Plus, "Thêm giao dịch")
                 }
@@ -232,23 +196,45 @@ fun TransactionsContent(
             }
 
             is TransactionsUiState.Success -> {
+                val hasNeedsReview = remember(uiState.transactions) {
+                    uiState.transactions.any { it.status == TransactionStatus.NEEDS_REVIEW }
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
                 ) {
-                    ScreenHeader("Giao dịch", "Mỗi khoản thu chi, đều rõ ràng.", Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
-                    // Search bar
+                    ScreenHeader(
+                        title = "Sổ giao dịch",
+                        subtitle = "Nhật ký thu chi minh bạch và chính xác.",
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                    )
+
+                    // Sửa lỗi P2: placeholder chỉ tìm theo nội dung ghi chú vì Room repo chỉ tìm theo row.note
                     OutlinedTextField(
                         value = uiState.keyword,
                         onValueChange = onKeywordChange,
-                        placeholder = { Text("Tìm giao dịch") },
-                        leadingIcon = { AppIcon(Glyph.Search) },
-                        shape = RoundedCornerShape(18.dp),
+                        placeholder = { Text("Tìm theo nội dung ghi chú...") },
+                        leadingIcon = { AppIcon(Glyph.Search, modifier = Modifier.size(20.dp)) },
+                        trailingIcon = {
+                            if (uiState.keyword.isNotEmpty()) {
+                                IconButton(onClick = { onKeywordChange("") }) {
+                                    AppIcon(Glyph.Close, "Xóa tìm kiếm", modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
                         singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                            .padding(horizontal = 20.dp, vertical = 4.dp),
                     )
 
                     // Type filter chips
@@ -256,7 +242,7 @@ fun TransactionsContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp, vertical = 4.dp),
+                            .padding(horizontal = 20.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         FilterChip(
@@ -266,32 +252,41 @@ fun TransactionsContent(
                                 onStatusSelect(null)
                             },
                             label = { Text("Tất cả") },
+                            shape = RoundedCornerShape(10.dp),
                         )
-                        FilterChip(
-                            selected = uiState.selectedStatus == TransactionStatus.NEEDS_REVIEW,
-                            onClick = {
-                                if (uiState.selectedStatus == TransactionStatus.NEEDS_REVIEW) {
-                                    onStatusSelect(null)
-                                } else {
-                                    onStatusSelect(TransactionStatus.NEEDS_REVIEW)
-                                }
-                            },
-                            label = { Text("Chờ xem lại") },
-                        )
+
+                        if (hasNeedsReview || uiState.selectedStatus == TransactionStatus.NEEDS_REVIEW) {
+                            FilterChip(
+                                selected = uiState.selectedStatus == TransactionStatus.NEEDS_REVIEW,
+                                onClick = {
+                                    if (uiState.selectedStatus == TransactionStatus.NEEDS_REVIEW) {
+                                        onStatusSelect(null)
+                                    } else {
+                                        onStatusSelect(TransactionStatus.NEEDS_REVIEW)
+                                    }
+                                },
+                                label = { Text("Chờ xem lại") },
+                                shape = RoundedCornerShape(10.dp),
+                            )
+                        }
+
                         FilterChip(
                             selected = uiState.selectedType == TransactionType.EXPENSE,
                             onClick = { onTypeSelect(TransactionType.EXPENSE) },
                             label = { Text("Chi tiêu") },
+                            shape = RoundedCornerShape(10.dp),
                         )
                         FilterChip(
                             selected = uiState.selectedType == TransactionType.INCOME,
                             onClick = { onTypeSelect(TransactionType.INCOME) },
                             label = { Text("Thu nhập") },
+                            shape = RoundedCornerShape(10.dp),
                         )
                         FilterChip(
                             selected = uiState.selectedType == TransactionType.TRANSFER,
                             onClick = { onTypeSelect(TransactionType.TRANSFER) },
                             label = { Text("Chuyển tiền") },
+                            shape = RoundedCornerShape(10.dp),
                         )
                     }
 
@@ -299,13 +294,13 @@ fun TransactionsContent(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(20.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             if (uiState.keyword.isNotBlank() || uiState.selectedType != null || uiState.selectedStatus != null) {
                                 EmptyPanel(
                                     title = "Không tìm thấy giao dịch",
-                                    description = "Thử thay đổi từ khóa hoặc bộ lọc để xem các giao dịch khác.",
+                                    description = "Không có ghi chú nào khớp với từ khóa tìm kiếm.",
                                     glyph = Glyph.Search,
                                     action = "Xóa bộ lọc",
                                     onAction = {
@@ -316,8 +311,8 @@ fun TransactionsContent(
                                 )
                             } else {
                                 EmptyPanel(
-                                    title = "Chưa có giao dịch nào",
-                                    description = "Ghi lại khoản chi tiêu hoặc nguồn thu nhập đầu tiên của bạn.",
+                                    title = "Chưa có bản ghi giao dịch",
+                                    description = "Ghi lại chi tiêu hoặc thu nhập đầu tiên vào sổ tiền.",
                                     glyph = Glyph.Transactions,
                                     action = "Thêm giao dịch",
                                     onAction = onAddClick,
@@ -331,28 +326,78 @@ fun TransactionsContent(
                         val categoriesMap = remember(uiState.categories) {
                             uiState.categories.associate { it.id to it.name }
                         }
+
+                        // Nhóm giao dịch theo ngày (gợi sổ / hóa đơn phẳng, không bao từng card viền riêng)
+                        val grouped = remember(uiState.transactions) {
+                            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            uiState.transactions.groupBy { tx ->
+                                sdf.format(Date(tx.occurredAtMillis))
+                            }
+                        }
+
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 100.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 96.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            items(uiState.transactions, key = { it.id }) { tx ->
-                                val accountLabel = if (tx.type == TransactionType.TRANSFER && tx.toAccountId != null) {
-                                    val from = accountsMap[tx.accountId] ?: "TK"
-                                    val to = accountsMap[tx.toAccountId] ?: "TK"
-                                    "$from → $to"
-                                } else {
-                                    accountsMap[tx.accountId] ?: "Tài khoản"
+                            grouped.forEach { (dateStr, txList) ->
+                                item(key = "header_$dateStr") {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 2.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = "Ngày $dateStr",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Text(
+                                            text = "${txList.size} giao dịch",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                        )
+                                    }
                                 }
-                                TransactionItemCard(
-                                    transaction = tx,
-                                    accountName = accountLabel,
-                                    categoryName = tx.categoryId?.let { categoriesMap[it] },
-                                    onEdit = { onEditClick(tx) },
-                                    onDelete = { onDeleteClick(tx.id) },
-                                    onConfirm = { onConfirmClick(tx.id) },
-                                    onReject = { onRejectClick(tx.id) },
-                                )
+
+                                item(key = "sheet_$dateStr") {
+                                    Surface(
+                                        shape = RoundedCornerShape(14.dp),
+                                        color = MaterialTheme.colorScheme.surface,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            txList.forEachIndexed { index, tx ->
+                                                val accountLabel = if (tx.type == TransactionType.TRANSFER && tx.toAccountId != null) {
+                                                    val from = accountsMap[tx.accountId] ?: "TK"
+                                                    val to = accountsMap[tx.toAccountId] ?: "TK"
+                                                    "$from → $to"
+                                                } else {
+                                                    accountsMap[tx.accountId] ?: "Tài khoản"
+                                                }
+
+                                                LedgerTransactionRowItem(
+                                                    transaction = tx,
+                                                    accountName = accountLabel,
+                                                    categoryName = tx.categoryId?.let { categoriesMap[it] },
+                                                    onEdit = { onEditClick(tx) },
+                                                    onDelete = { onDeleteClick(tx.id) },
+                                                    onConfirm = { onConfirmClick(tx.id) },
+                                                    onReject = { onRejectClick(tx.id) },
+                                                )
+
+                                                if (index < txList.size - 1) {
+                                                    HorizontalDivider(
+                                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                                        modifier = Modifier.padding(horizontal = 14.dp),
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -362,8 +407,11 @@ fun TransactionsContent(
     }
 }
 
+/**
+ * Hàng giao dịch phẳng trong phiếu sổ, không bao card viền riêng (UI_LEDGER_DIRECTION.md)
+ */
 @Composable
-private fun TransactionItemCard(
+private fun LedgerTransactionRowItem(
     transaction: Transaction,
     accountName: String,
     categoryName: String? = null,
@@ -373,69 +421,138 @@ private fun TransactionItemCard(
     onReject: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val dateFormat = remember { SimpleDateFormat("dd/MM · HH:mm", Locale.forLanguageTag("vi")) }
+    val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.forLanguageTag("vi-VN")) }
+    val isDark = MaterialTheme.colorScheme.background == CanvasDark
     val isExpense = transaction.type == TransactionType.EXPENSE
-    val color = if (isExpense) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val isTransfer = transaction.type == TransactionType.TRANSFER
+    val color = when {
+        isTransfer -> if (isDark) LedgerOnSlateDark else LedgerOnSlateLight
+        isExpense -> if (isDark) ExpenseDark else ExpenseLight
+        else -> if (isDark) IncomeDark else IncomeLight
+    }
+    val glyph = when {
+        isTransfer -> Glyph.Transfer
+        isExpense -> Glyph.Expense
+        else -> Glyph.Income
+    }
     var menuExpanded by remember { mutableStateOf(false) }
     val title = transaction.note.ifBlank {
         when (transaction.type) {
             TransactionType.EXPENSE -> "Chi tiêu"
             TransactionType.INCOME -> "Thu nhập"
-            TransactionType.TRANSFER -> "Chuyển tiền"
+            TransactionType.TRANSFER -> "Chuyển tiền nội bộ"
             TransactionType.REFUND -> "Hoàn tiền"
             TransactionType.ADJUSTMENT -> "Điều chỉnh"
         }
     }
-    Card(modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.padding(18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconTile(if (transaction.type == TransactionType.TRANSFER) Glyph.Transactions else if (isExpense) Glyph.Expense else Glyph.Income, color)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(listOfNotNull(categoryName, accountName).joinToString(" · "), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onEdit)
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconTile(glyph = glyph, tint = color, modifier = Modifier.size(36.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // Sửa lỗi P2: Tên tài khoản chia weight hợp lý, không đẩy ngày giờ ra ngoài
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    val subInfo = listOfNotNull(categoryName, accountName).joinToString(" · ")
+                    Text(
+                        text = subInfo,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    Text(
+                        text = " · ${dateFormat.format(Date(transaction.occurredAtMillis))}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                        maxLines = 1,
+                    )
                 }
-                Spacer(Modifier.width(8.dp))
-                Text(CurrencyUtils.formatVndWithSign(transaction.amount, isExpense), style = MaterialTheme.typography.titleSmall, color = color)
             }
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(dateFormat.format(Date(transaction.occurredAtMillis)), style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                val status = when (transaction.status) {
-                    TransactionStatus.NEEDS_REVIEW -> "Chờ xác nhận"
-                    TransactionStatus.REJECTED -> "Đã từ chối"
-                    else -> if (transaction.origin == TransactionOrigin.NOTIFICATION) "Tự động" else null
+            Spacer(Modifier.width(8.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = if (isTransfer) {
+                        CurrencyUtils.formatVnd(transaction.amount)
+                    } else {
+                        CurrencyUtils.formatVndWithSign(transaction.amount, isExpense)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = color,
+                )
+            }
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    AppIcon(Glyph.More, "Tùy chọn giao dịch", modifier = Modifier.size(18.dp))
                 }
-                if (status != null) {
-                    Text(status, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Box {
-                    IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(48.dp)) {
-                        AppIcon(Glyph.More, "Tùy chọn giao dịch", modifier = Modifier.size(20.dp))
-                    }
-                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                        DropdownMenuItem(text = { Text("Sửa giao dịch") }, onClick = {
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Sửa giao dịch") },
+                        onClick = {
                             menuExpanded = false
                             onEdit()
-                        })
-                        DropdownMenuItem(text = { Text("Xóa giao dịch") }, onClick = {
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Xóa giao dịch") },
+                        onClick = {
                             menuExpanded = false
                             onDelete()
-                        })
-                    }
+                        },
+                    )
                 }
             }
-            if (transaction.status == TransactionStatus.NEEDS_REVIEW || transaction.status == TransactionStatus.AUTO_RECORDED) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilledTonalButton(onClick = onConfirm, modifier = Modifier.weight(1f)) { Text("Xác nhận") }
-                    OutlinedButton(onClick = onReject, modifier = Modifier.weight(1f)) { Text("Từ chối") }
+        }
+
+        // Quick review actions if pending
+        if (transaction.status == TransactionStatus.NEEDS_REVIEW || transaction.status == TransactionStatus.AUTO_RECORDED) {
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilledTonalButton(
+                    onClick = onConfirm,
+                    modifier = Modifier.weight(1f).height(38.dp),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("Xác nhận", style = MaterialTheme.typography.labelMedium)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    modifier = Modifier.weight(1f).height(38.dp),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("Từ chối", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
     }
 }
+
 @Composable
 fun AddTransactionDialog(
     accounts: List<Account>,
@@ -488,16 +605,19 @@ fun AddTransactionDialog(
                         selected = selectedType == TransactionType.EXPENSE,
                         onClick = { selectedType = TransactionType.EXPENSE },
                         label = { Text("Chi tiêu") },
+                        shape = RoundedCornerShape(10.dp),
                     )
                     FilterChip(
                         selected = selectedType == TransactionType.INCOME,
                         onClick = { selectedType = TransactionType.INCOME },
                         label = { Text("Thu nhập") },
+                        shape = RoundedCornerShape(10.dp),
                     )
                     FilterChip(
                         selected = selectedType == TransactionType.TRANSFER,
                         onClick = { selectedType = TransactionType.TRANSFER },
                         label = { Text("Chuyển tiền") },
+                        shape = RoundedCornerShape(10.dp),
                     )
                 }
 
@@ -514,6 +634,7 @@ fun AddTransactionDialog(
                         }
                     },
                     label = { Text("Số tiền (VNĐ)") },
+                    shape = RoundedCornerShape(12.dp),
                     isError = amountError != null,
                     supportingText = {
                         if (amountError != null) {
@@ -539,6 +660,7 @@ fun AddTransactionDialog(
                         }
                     },
                     label = { Text(if (isTransfer) "Ghi chú (vd: Nạp ví, Rút tiền)" else "Ghi chú (vd: Ăn trưa, Lương)") },
+                    shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -575,6 +697,7 @@ fun AddTransactionDialog(
                                 isCategoryManuallyPicked = true
                             },
                             label = { Text("Không") },
+                            shape = RoundedCornerShape(10.dp),
                         )
                         relevantCategories.forEach { cat ->
                             FilterChip(
@@ -584,6 +707,7 @@ fun AddTransactionDialog(
                                     isCategoryManuallyPicked = true
                                 },
                                 label = { Text(cat.name) },
+                                shape = RoundedCornerShape(10.dp),
                             )
                         }
                     }
@@ -719,6 +843,7 @@ fun EditTransactionDialog(
                         }
                     },
                     label = { Text("Số tiền (VNĐ)") },
+                    shape = RoundedCornerShape(12.dp),
                     isError = amountError != null,
                     supportingText = {
                         if (amountError != null) {
@@ -744,6 +869,7 @@ fun EditTransactionDialog(
                         }
                     },
                     label = { Text("Ghi chú") },
+                    shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -780,6 +906,7 @@ fun EditTransactionDialog(
                                 isCategoryManuallyPicked = true
                             },
                             label = { Text("Không") },
+                            shape = RoundedCornerShape(10.dp),
                         )
                         relevantCategories.forEach { cat ->
                             FilterChip(
@@ -789,6 +916,7 @@ fun EditTransactionDialog(
                                     isCategoryManuallyPicked = true
                                 },
                                 label = { Text(cat.name) },
+                                shape = RoundedCornerShape(10.dp),
                             )
                         }
                     }
@@ -867,6 +995,14 @@ fun EditTransactionDialog(
             }
         },
     )
+}
+
+@Preview(name = "TransactionsScreen Light", showBackground = true)
+@Composable
+private fun TransactionsScreenLightPreview() {
+    EasyCashTheme(darkTheme = false) {
+        TransactionsScreen()
+    }
 }
 
 @Preview(name = "TransactionsScreen Dark", showBackground = true)

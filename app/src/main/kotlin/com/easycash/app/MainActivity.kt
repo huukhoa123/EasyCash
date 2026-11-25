@@ -1,5 +1,6 @@
 package com.easycash.app
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,12 +16,14 @@ import com.easycash.ui.theme.EasyCashTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class   MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("easycash_settings", Context.MODE_PRIVATE)
+        val initialDarkTheme = prefs.getBoolean("is_dark_theme", false) // Light is default per UI_REFRESH_LIGHT.md
         setContent {
-            var isDarkTheme by rememberSaveable { mutableStateOf(true) }
+            var isDarkTheme by rememberSaveable { mutableStateOf(initialDarkTheme) }
             DisposableEffect(isDarkTheme) {
                 enableEdgeToEdge(
                     statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT) { isDarkTheme },
@@ -31,7 +34,10 @@ class   MainActivity : ComponentActivity() {
             EasyCashTheme(darkTheme = isDarkTheme) {
                 MainScreen(
                     isDarkTheme = isDarkTheme,
-                    onDarkThemeToggle = { isDarkTheme = it },
+                    onDarkThemeToggle = { enabled ->
+                        isDarkTheme = enabled
+                        prefs.edit().putBoolean("is_dark_theme", enabled).apply()
+                    },
                 )
             }
         }

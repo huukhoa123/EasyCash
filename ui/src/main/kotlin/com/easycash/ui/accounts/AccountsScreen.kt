@@ -1,53 +1,24 @@
 package com.easycash.ui.accounts
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import com.easycash.ui.components.*
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.easycash.domain.Account
 import com.easycash.domain.AccountType
-
+import com.easycash.ui.components.*
 import com.easycash.ui.theme.EasyCashTheme
 import com.easycash.ui.util.CurrencyUtils
 
@@ -62,8 +33,12 @@ fun AccountsScreen(
     if (viewModel == null) {
         AccountsContent(
             uiState = AccountsUiState.Success(
-                accounts = emptyList<Account>(),
-                totalEstimatedBalance = emptyList<Account>().sumOf { it.estimatedBalance },
+                accounts = listOf(
+                    Account(1L, "Tiền mặt", AccountType.CASH, 2_500_000L, 2_500_000L, false),
+                    Account(2L, "BIDV SmartBanking", AccountType.BANK, 18_000_000L, 18_000_000L, false),
+                    Account(3L, "Ví MoMo", AccountType.EWALLET, 4_000_000L, 4_000_000L, false),
+                ),
+                totalEstimatedBalance = 24_500_000L,
             ),
             onAddClick = { showAddDialog = true },
             onEditClick = {},
@@ -130,46 +105,121 @@ fun AccountsContent(
                 ExtendedFloatingActionButton(
                     onClick = onAddClick,
                     icon = { AppIcon(Glyph.Plus) },
-                    text = { Text("Thêm tài khoản") },
+                    text = { Text("Thêm ví / tài khoản") },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp),
                 )
             }
         },
     ) { padding ->
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { ScreenHeader("Tài khoản", "Tiền của bạn, ở một nơi.") }
+            item {
+                ScreenHeader("Sổ tài khoản", "Quản lý ví tiền mặt và các nguồn tiền cá nhân.")
+            }
+
             when (uiState) {
                 AccountsUiState.Loading -> item {
-                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
                 }
                 AccountsUiState.Empty -> item {
-                    EmptyPanel("Tạo tài khoản đầu tiên", "Nhập số dư hiện tại của ngân hàng, ví hoặc tiền mặt để bắt đầu theo dõi.",
-                        Glyph.Wallet, "Thêm tài khoản", onAddClick)
+                    EmptyPanel(
+                        title = "Tạo ví đầu tiên",
+                        description = "Nhập số dư hiện tại của ngân hàng, ví hoặc tiền mặt để ghi chép thu chi.",
+                        glyph = Glyph.Wallet,
+                        action = "Thêm tài khoản",
+                        onAction = onAddClick,
+                    )
                 }
                 is AccountsUiState.Success -> {
+                    // Summary card at top (ledger style)
                     item {
-                        Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                            Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Text("Số dư ước tính", style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                Text(CurrencyUtils.formatVnd(uiState.totalEstimatedBalance), style = MaterialTheme.typography.displaySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("${uiState.accounts.size} tài khoản đang hoạt động", style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 18.dp, vertical = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(
+                                    text = "TỔNG SỐ DƯ CÁC VÍ",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    letterSpacing = 0.6.sp,
+                                )
+                                Text(
+                                    text = CurrencyUtils.formatVnd(uiState.totalEstimatedBalance),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = "${uiState.accounts.size} ví đang hoạt động ngoại tuyến",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
                             }
                         }
                     }
+
                     if (uiState.accounts.isEmpty()) {
-                        item { EmptyPanel("Chưa có tài khoản", "Thêm tài khoản để bắt đầu ghi nhận thu và chi.", Glyph.Wallet) }
+                        item {
+                            EmptyPanel(
+                                title = "Chưa có tài khoản",
+                                description = "Thêm tài khoản để bắt đầu ghi nhận thu và chi.",
+                                glyph = Glyph.Wallet,
+                                action = "Thêm tài khoản",
+                                onAction = onAddClick,
+                            )
+                        }
                     } else {
-                        item { Text("Tài khoản của bạn", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp)) }
-                        items(uiState.accounts, key = { it.id }) { account ->
-                            AccountItemCard(account, { onEditClick(account) }, { onArchiveClick(account.id) })
+                        item {
+                            Text(
+                                text = "Lưới ví & nguồn tiền",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+
+                        // Lưới 2 cột cho ví (UI_LEDGER_DIRECTION.md)
+                        val chunked = uiState.accounts.chunked(2)
+                        items(chunked.size) { rowIndex ->
+                            val rowAccounts = chunked[rowIndex]
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                rowAccounts.forEach { account ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        LedgerAccountCard(
+                                            account = account,
+                                            onEdit = { onEditClick(account) },
+                                            onArchive = { onArchiveClick(account.id) },
+                                        )
+                                    }
+                                }
+                                if (rowAccounts.size == 1) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
@@ -179,7 +229,7 @@ fun AccountsContent(
 }
 
 @Composable
-private fun AccountItemCard(
+private fun LedgerAccountCard(
     account: Account,
     onEdit: () -> Unit = {},
     onArchive: () -> Unit,
@@ -191,39 +241,82 @@ private fun AccountItemCard(
         AccountType.BANK -> "Ngân hàng"
         AccountType.EWALLET -> "Ví điện tử"
     }
-    Card(onClick = onEdit, modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconTile(
-                    when (account.type) {
-                        AccountType.CASH -> Glyph.Cash
-                        AccountType.BANK -> Glyph.Bank
-                        AccountType.EWALLET -> Glyph.Wallet
-                    }
-                )
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(typeLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(account.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+    val glyph = when (account.type) {
+        AccountType.CASH -> Glyph.Cash
+        AccountType.BANK -> Glyph.Bank
+        AccountType.EWALLET -> Glyph.Wallet
+    }
+
+    Surface(
+        onClick = onEdit,
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconTile(glyph = glyph, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
                 Box {
-                    IconButton(onClick = { showMenu = true }, modifier = Modifier.size(48.dp)) {
-                        AppIcon(Glyph.More, "Tùy chọn tài khoản")
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        AppIcon(Glyph.More, "Tùy chọn ví", modifier = Modifier.size(16.dp))
                     }
                     DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(text = { Text("Sửa tài khoản") }, onClick = { showMenu = false; onEdit() })
-                        DropdownMenuItem(text = { Text("Ẩn tài khoản") }, onClick = { showMenu = false; onArchive() })
+                        DropdownMenuItem(
+                            text = { Text("Sửa tài khoản") },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Ẩn tài khoản") },
+                            onClick = {
+                                showMenu = false
+                                onArchive()
+                            },
+                        )
                     }
                 }
             }
-            Spacer(Modifier.height(24.dp))
-            Text(CurrencyUtils.formatVnd(account.estimatedBalance), style = MaterialTheme.typography.headlineMedium)
-            Spacer(Modifier.height(3.dp))
-            Text("Số dư ước tính", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column {
+                Text(
+                    text = account.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = typeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                text = CurrencyUtils.formatVnd(account.estimatedBalance),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
+
 @Composable
 fun AddAccountDialog(
     onDismiss: () -> Unit,
@@ -235,42 +328,43 @@ fun AddAccountDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Thêm tài khoản") },
+        title = { Text("Thêm ví / tài khoản") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Tên tài khoản") },
+                    label = { Text("Tên tài khoản (vd: BIDV, Tiền mặt)") },
+                    shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Text(text = "Loại tài khoản:", style = MaterialTheme.typography.labelMedium)
-                Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     AccountType.entries.forEach { type ->
                         val label = when (type) {
                             AccountType.CASH -> "Tiền mặt"
                             AccountType.BANK -> "Ngân hàng"
                             AccountType.EWALLET -> "Ví điện tử"
                         }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            RadioButton(
-                                selected = selectedType == type,
-                                onClick = { selectedType = type },
-                            )
-                            Text(text = label, style = MaterialTheme.typography.bodyMedium)
-                        }
+                        FilterChip(
+                            selected = selectedType == type,
+                            onClick = { selectedType = type },
+                            label = { Text(label) },
+                            shape = RoundedCornerShape(10.dp),
+                        )
                     }
                 }
 
                 OutlinedTextField(
                     value = balanceText,
                     onValueChange = { balanceText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Số dư hiện tại (₫)") },
+                    label = { Text("Số dư ban đầu (₫)") },
+                    shape = RoundedCornerShape(12.dp),
                     isError = balanceText.isNotBlank() && balanceText.toLongOrNull() == null,
                     supportingText = {
                         val parsed = balanceText.toLongOrNull()
@@ -291,7 +385,7 @@ fun AddAccountDialog(
                 onClick = {
                     val balance = balanceText.ifBlank { "0" }.toLongOrNull() ?: return@Button
                     if (name.isNotBlank()) {
-                        onConfirm(name, selectedType, balance)
+                        onConfirm(name.trim(), selectedType, balance)
                     }
                 },
                 enabled = name.isNotBlank() && balanceText.ifBlank { "0" }.toLongOrNull() != null,
@@ -325,28 +419,28 @@ fun EditAccountDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Tên tài khoản") },
+                    shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Text(text = "Loại tài khoản:", style = MaterialTheme.typography.labelMedium)
-                Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     AccountType.entries.forEach { type ->
                         val label = when (type) {
                             AccountType.CASH -> "Tiền mặt"
                             AccountType.BANK -> "Ngân hàng"
                             AccountType.EWALLET -> "Ví điện tử"
                         }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            RadioButton(
-                                selected = selectedType == type,
-                                onClick = { selectedType = type },
-                            )
-                            Text(text = label, style = MaterialTheme.typography.bodyMedium)
-                        }
+                        FilterChip(
+                            selected = selectedType == type,
+                            onClick = { selectedType = type },
+                            label = { Text(label) },
+                            shape = RoundedCornerShape(10.dp),
+                        )
                     }
                 }
             }
@@ -369,6 +463,14 @@ fun EditAccountDialog(
             }
         },
     )
+}
+
+@Preview(name = "AccountsScreen Light", showBackground = true)
+@Composable
+private fun AccountsScreenLightPreview() {
+    EasyCashTheme(darkTheme = false) {
+        AccountsScreen()
+    }
 }
 
 @Preview(name = "AccountsScreen Dark", showBackground = true)

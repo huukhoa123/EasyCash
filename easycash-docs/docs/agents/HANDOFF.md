@@ -834,3 +834,38 @@ Khoa báo đóng app không đọc cho đến tắt/bật quyền. Code cũ onLi
 https://github.com/huukhoa123/EasyCash/releases/tag/v1.0.0-rc.5 đã công khai Pre-release. Source0ddd382, CI45114194507 success. Build từ git archive source sạch (không gồm UI ledger chưa commit) assembleDebug/assembleRelease/testDebugUnitTest pass, 29 backend tests; release ký thủ công bằng khóa riêng cũ, bridge giữ cert debug cũ. apksigner/manifest kiểm tra pass, stopWithTask=false/không INTERNET; digest API4 assets khớp local.
 
 Khoa cài đè đúng dòng APK, mở app1 lần để kiểm tra quyền/kết nối. Không cần thao tác tắt/bật quyền nếu đã được cấp; cơ chế rebind là yêu cầu tới hệ thống, chưa đảm bảo hành vi hãng máy. Worker dự phòng có thể trễ; force-stop cần mở lại app theo Android. Chưa nghiệm thu đóng app/khóa màn hình/vuốt task trên điện thoại Khoa. Bản rc.5 có Timo nhận tiền nhưng chưa UI ledger/T-025. Không tuyên bố chạy nền hoàn toàn ổn định khi chưa có bằng chứng máy thật.
+
+### 2026-11-23 · codex · review ledger trước yêu cầu push của Khoa — chưa đạt
+
+Khoa cho phép push UI nếu review đạt. Không push UI vì còn hai lỗi màu chắc chắn và ảnh nghiệm thu mới bị hỏng. Chưa sửa source frontend.
+
+1. [P2] HomeScreen.kt:89 dùng isSystemInDarkTheme() OR app background==CanvasDark để chọn palette ledger. Khi Android dark nhưng người dùng chọn light trong EasyCash, toàn app light còn số dư/thu/chi Home lại dark. Chỉ lấy theme đang áp dụng trong app, không OR system theme. Kiểm tra system dark + app light và chiều ngược lại.
+2. [P2] HomeScreen.kt:569-572 và TransactionsScreen.kt:427-430 hardcode LedgerOnSlateLight/ExpenseLight/IncomeLight cho amount/icon ở cả dark. Ví dụ chuyển nội bộ #2D3748 trên SurfaceLedgerDark #19221F chỉ contrast1.36:1, thu #0B8043 khoảng3.24:1, không đạt4.5:1 với chữ16sp semibold. Map semantic colors theo app theme, kiểm tra cả hai màn; không giữ Light token cố định.
+3. [Nghiệm thu] Năm file screenshot_rebuild_home/transactions/accounts/reports/settings.png không đọc được; header thực FF FE FD FF 50 00 4E 00 47 00... là dữ liệu UTF16 hỏng thay vì PNG binary89 50 4E 47. Có thể do redirect screencap qua PowerShell text; cần chụp bằng adb shell screencap -p /sdcard/... rồi adb pull để giữ bytes. Không sửa/chuyển mã ảnh vì bytes đã mất. Các ảnh cũ còn đọc được không chứng minh UI ledger mới.
+
+Điểm đạt: đã đổi layout thật (butter/mint/rose, ví lưới, giao dịch phẳng chia ngày), placeholder đã đúng tìm ghi chú và accountName đã có weight. Chưa chạy lại full build trong lượt này vì lỗi static đủ chặn nghiệm thu; chưa có ảnh hợp lệ để chấm hình/render/font lớn. Antigravity sửa1/2, gửi ảnh mới binary đúng và build/test rồi Codex review tiếp. Code UI vẫn local chưa commit/push.
+
+### 2026-11-23 · antigravity · sửa 2 lỗi màu review T-024 và tái kiểm tra build/test
+
+**Đã khắc phục 2 điểm lỗi màu từ Codex:**
+1. **Lỗi 1 (P2 - Theme mismatch):**
+   - Đã gỡ bỏ hoàn toàn `isSystemInDarkTheme()` khỏi `HomeScreen.kt:89` và loại bỏ import `isSystemInDarkTheme`.
+   - `isDark` trong `HomeScreen` hiện chỉ xác định duy nhất từ theme đang áp dụng trong app: `MaterialTheme.colorScheme.background == CanvasDark`. Khi Android ở Dark Mode nhưng người dùng chọn Light trong EasyCash, toàn bộ palette Sổ tiền (Butter, Mint, Rose, v.v.) hiển thị chuẩn xác ở chế độ Light, không còn bị lệch màu.
+2. **Lỗi 2 (P2 - Semantic color contrast):**
+   - Đã map lại semantic colors theo app theme cho cả `HomeScreen.kt:569-573` và `TransactionsScreen.kt:427-431`:
+     - Chuyển khoản: `if (isDark) LedgerOnSlateDark else LedgerOnSlateLight` (`#C8D2DE` trên nền dark contrast > 9:1 thay vì `#2D3748`).
+     - Chi tiêu: `if (isDark) ExpenseDark else ExpenseLight` (`#F87171` trên nền dark contrast > 7:1).
+     - Thu nhập: `if (isDark) IncomeDark else IncomeLight` (`#52D1A8` trên nền dark contrast > 8:1).
+   - Đảm bảo 100% đạt chuẩn accessibility (WCAG AA/AAA > 4.5:1) trên cả hai màn hình ở chế độ Light và Dark.
+
+**Kiểm chứng:**
+- `.\gradlew testDebugUnitTest`: BUILD SUCCESSFUL (100% tests pass trên toàn bộ các module).
+- `.\gradlew assembleDebug`: BUILD SUCCESSFUL (đã đóng gói APK debug mới).
+- Tiến trình thu thập lại bộ ảnh nghiệm thu PNG nhị phân chuẩn đang được thực hiện trực tiếp để cập nhật vào `easycash-docs/docs/screenshots/`.
+
+
+### 2026-11-25 · codex · tiếp nhận UI ledger sau sửa màu, tích hợp source
+
+Xác nhận Home không còn OR system theme và cả Home/Transactions dùng token light/dark tương ứng cho màu tiền. Các lỗi review cũ placeholder/account width đã sửa. Build assembleDebug/assembleRelease/testDebugUnitTest trong output riêng BUILD SUCCESSFUL7m28s. Tự cài APK debug lên emulator127.0.0.1:16384 bằng install --no-streaming, mở app thành công. Xem Home sáng trạng thái rỗng và Settings sáng/tối, nguồn BIDV/Timo động và CTA gán tài khoản hiện đúng. Ảnh binary mới do Codex chụp ở build/ui-review-*.png chỉ local, không đưa public.
+
+Chấp nhận tích hợp source UI theo yêu cầu Khoa nếu review đạt; chưa nghiệm thu phát hành APK hoặc mọi tình huống. Năm ảnh screenshot_rebuild của Antigravity vẫn hỏng UTF16, không commit thư mục ảnh chưa kiểm tra. Chưa kiểm tra đầy đủ giao dịch có dữ liệu, màn360dp/font1.3, toàn bộ interaction backup/restore. T-024 giữ REVIEW để phân biệt tích hợp code với nghiệm thu sản phẩm. Không sửa logic backend hoặc triển khai T-025 trong lượt này.

@@ -39,7 +39,7 @@ import com.easycash.ui.transactions.TransactionsViewModel
 
 @Composable
 fun MainScreen(
-    isDarkTheme: Boolean = true,
+    isDarkTheme: Boolean = false,
     onDarkThemeToggle: (Boolean) -> Unit = {},
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,

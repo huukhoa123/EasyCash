@@ -5,6 +5,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
@@ -80,7 +82,7 @@ private const val MAX_RESTORE_FILE_SIZE = 32 * 1024 * 1024 + 48
 
 @Composable
 fun SettingsScreen(
-    isDarkTheme: Boolean = true,
+    isDarkTheme: Boolean = false,
     onDarkThemeToggle: (Boolean) -> Unit = {},
     viewModel: SettingsViewModel? = null,
     modifier: Modifier = Modifier,
@@ -89,14 +91,14 @@ fun SettingsScreen(
         SettingsContent(
             uiState = SettingsUiState.Success(
                 sources = listOf(
-                    NotificationSource(1L, "com.mservice.momopay", "Ví MoMo", true, 3L),
-                    NotificationSource(2L, "com.vnpay.bidv", "BIDV SmartBanking", true, 2L),
+                    NotificationSource(1L, "com.vnpay.bidv", "BIDV SmartBanking", true, null),
+                    NotificationSource(2L, "io.lifestyle.plus", "Timo Digital Bank", true, null),
                 ),
                 isAccessGranted = false,
                 accounts = listOf(
                     Account(1L, "Tiền mặt", AccountType.CASH, 0L, 0L, false),
                     Account(2L, "BIDV", AccountType.BANK, 0L, 0L, false),
-                    Account(3L, "MoMo", AccountType.EWALLET, 0L, 0L, false),
+                    Account(3L, "Timo", AccountType.BANK, 0L, 0L, false),
                 ),
                 categories = listOf(
                     Category(1L, "Ăn uống", CategoryType.EXPENSE, "food", "orange", true),
@@ -308,12 +310,14 @@ fun SettingsContent(
 
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
+                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 48.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                item { ScreenHeader("Cài đặt", "Cá nhân hóa và quản lý dữ liệu.") }
+                item {
+                    ScreenHeader("Cài đặt", "Cá nhân hóa và bảo vệ dữ liệu ngoại tuyến.")
+                }
 
-                // Section 1: Giao diện
+                // NHÓM 1: GIAO DIỆN (UI_REFRESH_LIGHT.md)
                 item {
                     Text(
                         text = "Giao diện",
@@ -321,10 +325,12 @@ fun SettingsContent(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     ) {
                         Row(
                             modifier = Modifier
@@ -337,12 +343,12 @@ fun SettingsContent(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     text = "Chế độ tối",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    text = if (isDarkTheme) "Tối · Êm dịu cho mắt" else "Sáng · Rõ ràng mỗi ngày",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = if (isDarkTheme) "Tối · Êm dịu khi sử dụng ban đêm" else "Sáng · Tinh tế, rõ ràng mỗi ngày",
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -351,7 +357,7 @@ fun SettingsContent(
                     }
                 }
 
-                // Section 2: Nguồn đọc thông báo
+                // NHÓM 2: TỰ ĐỘNG GHI NHẬN (UI_REFRESH_LIGHT.md)
                 item {
                     Text(
                         text = "Tự động ghi nhận",
@@ -359,153 +365,165 @@ fun SettingsContent(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
+                    Spacer(modifier = Modifier.height(6.dp))
+                    // Hàng trạng thái quyền đọc thông báo gọn (UI_REFRESH_LIGHT.md)
+                    Surface(
+                        onClick = {
+                            if (uiState.isAccessGranted) {
+                                try {
+                                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                                } catch (_: Exception) {}
+                            } else {
+                                showPermissionGuideDialog = true
+                            }
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconTile(Glyph.Shield)
-                                Spacer(Modifier.width(14.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Bảo vệ quyền riêng tư",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                    Text(
-                                        text = "Thông báo giao dịch được xử lý 100% trên thiết bị.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "Trạng thái quyền: ",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                                Text(
-                                    text = if (uiState.isAccessGranted) "Đã cấp quyền" else "Chưa cấp quyền",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (uiState.isAccessGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            OutlinedButton(
-                                onClick = {
-                                    if (uiState.isAccessGranted) {
-                                        try {
-                                            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                                        } catch (_: Exception) {
-                                        }
-                                    } else {
-                                        showPermissionGuideDialog = true
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(if (uiState.isAccessGranted) "Quản lý quyền trong cài đặt Android" else "Cấp quyền đọc thông báo ngay")
-                            }
-                        }
-                    }
-                }
-
-                // Danh sách nguồn thông báo
-                items(uiState.sources, key = { it.id }) { source ->
-                    val linkedName = source.linkedAccountId?.let { accountsMap[it] } ?: "Chưa liên kết tài khoản"
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
+                                .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                            IconTile(
+                                glyph = Glyph.Shield,
+                                tint = if (uiState.isAccessGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                            )
+                            Spacer(Modifier.width(14.dp))
+                            Column(Modifier.weight(1f)) {
                                 Text(
-                                    text = source.displayName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
+                                    text = "Quyền đọc thông báo ngân hàng",
+                                    style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    text = "Gán vào: $linkedName",
+                                    text = if (uiState.isAccessGranted) "Đã cấp quyền · Hoạt động ngoại tuyến" else "Chưa cấp quyền — bấm để hướng dẫn cấp",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = if (uiState.isAccessGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                    fontWeight = if (uiState.isAccessGranted) FontWeight.Normal else FontWeight.SemiBold,
                                 )
-                                TextButton(
-                                    onClick = { editingSource = source },
-                                    contentPadding = PaddingValues(0.dp),
-                                ) {
-                                    Text("Đổi tài khoản đích")
-                                }
                             }
-
-                            Switch(
-                                checked = source.isEnabled,
-                                onCheckedChange = { onToggleSource(source.id, it) },
+                            AppIcon(
+                                glyph = Glyph.Arrow,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp),
                             )
                         }
                     }
                 }
 
-                // Section 3: Quản lý danh mục thu/chi
-                item {
-                    Row(
+                // Thẻ các nguồn thông báo (BIDV, MoMo) theo UI_REFRESH_LIGHT.md
+                items(uiState.sources, key = { it.id }) { source ->
+                    val linkedName = source.linkedAccountId?.let { accountsMap[it] }
+                    val isLinked = linkedName != null
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(
+                            1.dp,
+                            if (!isLinked) MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.outlineVariant
+                        ),
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = "Danh mục thu / chi",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        TextButton(onClick = { showAddCategoryDialog = true }) {
-                            Text("Thêm danh mục")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            if (uiState.categories.isEmpty()) {
-                                Text(
-                                    text = "Chưa có danh mục nào trong cơ sở dữ liệu. Bạn có thể bấm '+ Thêm danh mục' để tạo mới.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            // Top row: Name + Status text + Switch
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                IconTile(
+                                    glyph = if (source.packageName.contains("momo")) Glyph.Wallet else Glyph.Bank,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(38.dp),
                                 )
-                            } else {
-                                Text(
-                                    text = "Đang có ${uiState.categories.size} danh mục:",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        text = source.displayName,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    Text(
+                                        text = if (source.isEnabled) "Trạng thái: Đang bật" else "Trạng thái: Đang tắt",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (source.isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                Switch(
+                                    checked = source.isEnabled,
+                                    onCheckedChange = { onToggleSource(source.id, it) },
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                            // Bottom row: Linked Account or Clear Warning
+                            if (isLinked) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    uiState.categories.forEach { cat ->
-                                        SuggestionChip(
-                                            onClick = {},
-                                            label = {
-                                                Text("${cat.name} (${if (cat.type == CategoryType.EXPENSE) "Chi" else "Thu"})")
-                                            },
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Tài khoản đích ghi nhận:",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
+                                        Text(
+                                            text = linkedName.orEmpty(),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    }
+                                    TextButton(onClick = { editingSource = source }) {
+                                        Text("Đổi tài khoản")
+                                    }
+                                }
+                            } else {
+                                // "Chưa thể ghi giao dịch — chọn tài khoản đích" cùng CTA rõ (UI_REFRESH_LIGHT.md)
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            text = "Chưa thể ghi giao dịch — chọn tài khoản đích",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                        Text(
+                                            text = "Bạn cần gán tài khoản nhận tiền (vd: ${source.displayName}) để hệ thống biết ghi vào đâu.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        FilledTonalButton(
+                                            onClick = { editingSource = source },
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            ),
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Text("Chọn tài khoản đích ngay")
+                                        }
                                     }
                                 }
                             }
@@ -513,7 +531,53 @@ fun SettingsContent(
                     }
                 }
 
-                // Section 4: Quản lý dữ liệu (P-002: Backup, Restore, CSV, Clear all)
+                // Danh mục thu/chi
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "Danh mục thu / chi (${uiState.categories.size})",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                TextButton(onClick = { showAddCategoryDialog = true }) {
+                                    AppIcon(Glyph.Plus, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Thêm mới")
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                uiState.categories.forEach { cat ->
+                                    SuggestionChip(
+                                        onClick = {},
+                                        label = {
+                                            Text("${cat.name} (${if (cat.type == CategoryType.EXPENSE) "Chi" else "Thu"})")
+                                        },
+                                        shape = RoundedCornerShape(10.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // NHÓM 3: QUẢN LÝ DỮ LIỆU (UI_REFRESH_LIGHT.md)
                 item {
                     Text(
                         text = "Quản lý dữ liệu",
@@ -521,12 +585,17 @@ fun SettingsContent(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
                             DataActionRow(
                                 glyph = Glyph.Download,
                                 title = "Sao lưu dữ liệu mã hoá",
@@ -537,14 +606,14 @@ fun SettingsContent(
                             DataActionRow(
                                 glyph = Glyph.Upload,
                                 title = "Khôi phục từ bản sao lưu",
-                                subtitle = "Nhập file .ecb và mật khẩu (toàn bộ dữ liệu hiện tại sẽ bị thay thế).",
+                                subtitle = "Nhập file .ecb và mật khẩu (dữ liệu hiện tại sẽ được thay thế an toàn).",
                                 onClick = { restoreLauncher.launch(arrayOf("*/*")) },
                             )
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                             DataActionRow(
                                 glyph = Glyph.Document,
                                 title = "Xuất danh sách sang CSV",
-                                subtitle = "Xuất toàn bộ giao dịch để mở trong Excel, Google Sheets.",
+                                subtitle = "Mở trong Excel, Google Sheets để xem chi tiết.",
                                 onClick = {
                                     onExportCsv { csv ->
                                         pendingCsvData = csv
@@ -565,26 +634,21 @@ fun SettingsContent(
                     }
                 }
 
-                // Section 5: Về ứng dụng
+                // THÔNG TIN ỨNG DỤNG
                 item {
-                    Text(
-                        text = "Thông tin",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     ) {
-                        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                            IconTile(Glyph.Shield)
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            IconTile(Glyph.Shield, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(14.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     text = "EasyCash v1.0",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
@@ -664,17 +728,20 @@ fun SettingsContent(
                                     selected = newCatType == CategoryType.EXPENSE,
                                     onClick = { newCatType = CategoryType.EXPENSE },
                                     label = { Text("Chi tiêu") },
+                                    shape = RoundedCornerShape(10.dp),
                                 )
                                 FilterChip(
                                     selected = newCatType == CategoryType.INCOME,
                                     onClick = { newCatType = CategoryType.INCOME },
                                     label = { Text("Thu nhập") },
+                                    shape = RoundedCornerShape(10.dp),
                                 )
                             }
                             OutlinedTextField(
                                 value = newCatName,
                                 onValueChange = { newCatName = it },
                                 label = { Text("Tên danh mục (vd: Xăng xe, Cà phê)") },
+                                shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -782,6 +849,7 @@ fun SettingsContent(
                                 value = password,
                                 onValueChange = { password = it },
                                 label = { Text("Mật khẩu sao lưu (từ 8 ký tự)") },
+                                shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
                                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 trailingIcon = {
@@ -871,6 +939,7 @@ fun SettingsContent(
                                 value = restorePassword,
                                 onValueChange = { restorePassword = it },
                                 label = { Text("Mật khẩu giải mã") },
+                                shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
                                 visualTransformation = if (restorePasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 trailingIcon = {
@@ -986,7 +1055,7 @@ private fun DataActionRow(
             .fillMaxWidth()
             .defaultMinSize(minHeight = 48.dp)
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconTile(glyph, tint = tint)
@@ -994,8 +1063,7 @@ private fun DataActionRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleSmall,
                 color = if (tint == MaterialTheme.colorScheme.error) tint else MaterialTheme.colorScheme.onSurface,
             )
             Text(
@@ -1008,16 +1076,8 @@ private fun DataActionRow(
         AppIcon(
             glyph = Glyph.Arrow,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(18.dp),
         )
-    }
-}
-
-@Preview(name = "SettingsScreen Dark", showBackground = true)
-@Composable
-private fun SettingsScreenDarkPreview() {
-    EasyCashTheme(darkTheme = true) {
-        SettingsScreen()
     }
 }
 
@@ -1026,5 +1086,13 @@ private fun SettingsScreenDarkPreview() {
 private fun SettingsScreenLightPreview() {
     EasyCashTheme(darkTheme = false) {
         SettingsScreen(isDarkTheme = false)
+    }
+}
+
+@Preview(name = "SettingsScreen Dark", showBackground = true)
+@Composable
+private fun SettingsScreenDarkPreview() {
+    EasyCashTheme(darkTheme = true) {
+        SettingsScreen(isDarkTheme = true)
     }
 }

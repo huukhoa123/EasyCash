@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 enum class Glyph(val path: String) {
@@ -28,6 +27,7 @@ enum class Glyph(val path: String) {
     Arrow("M5 12 L19 12 M13 6 L19 12 L13 18"),
     Income("M6 18 L18 6 M6 6 L18 6 L18 18"),
     Expense("M6 6 L18 18 M6 18 L18 18 L18 6"),
+    Transfer("M5 9 H19 M15 5 L19 9 L15 13 M19 15 H5 M9 19 L5 15 L9 11"),
     Shield("M12 3 L20 6 L20 12 C20 17 16 20 12 22 C8 20 4 17 4 12 L4 6 Z M8 12 L11 15 L16 9"),
     Search("M10 3 A7 7 0 1 0 10 17 A7 7 0 1 0 10 3 M15 15 L21 21"),
     Eye("M2 12 C7 3 17 3 22 12 C17 21 7 21 2 12 M12 9 A3 3 0 1 0 12 15 A3 3 0 1 0 12 9"),
@@ -51,42 +51,115 @@ enum class Glyph(val path: String) {
 }
 
 @Composable
-fun AppIcon(glyph: Glyph, contentDescription: String? = null, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current) {
+fun AppIcon(
+    glyph: Glyph,
+    contentDescription: String? = null,
+    modifier: Modifier = Modifier,
+    tint: Color = LocalContentColor.current,
+) {
     val vector = remember(glyph) {
         ImageVector.Builder(glyph.name, 24.dp, 24.dp, 24f, 24f)
-            .addPath(PathParser().parsePathString(glyph.path).toNodes(), fill = null, stroke = SolidColor(Color.Black),
-                strokeLineWidth = 1.7f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round)
+            .addPath(
+                PathParser().parsePathString(glyph.path).toNodes(),
+                fill = null,
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.75f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            )
             .build()
     }
-    Icon(vector, contentDescription, modifier.size(24.dp), tint)
+    Icon(vector, contentDescription, modifier.size(22.dp), tint)
 }
 
 @Composable
-fun IconTile(glyph: Glyph, tint: Color = MaterialTheme.colorScheme.primary, modifier: Modifier = Modifier) {
-    Box(modifier.size(44.dp).background(tint.copy(alpha = 0.10f), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-        AppIcon(glyph, tint = tint)
+fun IconTile(
+    glyph: Glyph,
+    tint: Color = MaterialTheme.colorScheme.primary,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .background(tint.copy(alpha = 0.12f), RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        AppIcon(glyph, tint = tint, modifier = Modifier.size(20.dp))
     }
 }
 
 @Composable
-fun ScreenHeader(title: String, subtitle: String, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
-        Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+fun ScreenHeader(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
 @Composable
-fun EmptyPanel(title: String, description: String, glyph: Glyph, action: String? = null, onAction: () -> Unit = {}) {
-    Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))) {
-        Column(Modifier.fillMaxWidth().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            IconTile(glyph)
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-            if (action != null) FilledTonalButton(onClick = onAction) { Text(action) }
+fun EmptyPanel(
+    title: String,
+    description: String,
+    glyph: Glyph,
+    action: String? = null,
+    onAction: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            IconTile(glyph, modifier = Modifier.size(44.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            if (action != null) {
+                FilledTonalButton(
+                    onClick = onAction,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    modifier = Modifier.padding(top = 4.dp),
+                ) {
+                    Text(action, style = MaterialTheme.typography.labelLarge)
+                }
+            }
         }
     }
 }

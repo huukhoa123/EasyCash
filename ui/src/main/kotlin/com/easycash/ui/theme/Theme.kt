@@ -1,6 +1,5 @@
 package com.easycash.ui.theme
 
-
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -8,52 +7,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = EmeraldPrimaryDark,
-    primaryContainer = Color(0xFF193E34),
-    onPrimaryContainer = Color(0xFFB2F3D7),
-    outline = Color(0xFF70827D),
-    outlineVariant = Color(0xFF2B3A43),
-    secondary = TealSecondaryDark,
-    secondaryContainer = Color(0xFF243A3D),
-    onSecondaryContainer = Color(0xFFC9EBE8),
-    tertiary = Color(0xFFE2BC7E),
-    background = NavyBackgroundDark,
-    surface = NavySurfaceDark,
-    surfaceVariant = NavySurfaceVariantDark,
-    onPrimary = Color(0xFF022C22),
-    onSecondary = Color(0xFF042F2E),
-    onBackground = TextPrimaryDark,
-    onSurface = TextPrimaryDark,
-    onSurfaceVariant = TextSecondaryDark,
+    primary = BrandPrimaryDark,
+    onPrimary = Color(0xFF022B21),
+    primaryContainer = BrandPrimaryContainerDark,
+    onPrimaryContainer = BrandOnPrimaryContainerDark,
+    secondary = LedgerOnMintDark,
+    onSecondary = Color(0xFF003731),
+    secondaryContainer = Color(0xFF1B3D38),
+    onSecondaryContainer = Color(0xFFC7F3EC),
+    tertiary = LedgerOnButterDark,
+    onTertiary = Color(0xFF402D05),
+    background = CanvasDark,
+    onBackground = TextInkPrimaryDark,
+    surface = SurfaceLedgerDark,
+    onSurface = TextInkPrimaryDark,
+    surfaceVariant = SurfaceVariantLedgerDark,
+    onSurfaceVariant = TextInkSecondaryDark,
+    outline = OutlineLedgerDark,
+    outlineVariant = OutlineVariantLedgerDark,
     error = ExpenseDark,
-    onError = Color.Black,
+    onError = Color(0xFF560004),
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = EmeraldPrimaryLight,
-    primaryContainer = Color(0xFFD4F4E4),
-    onPrimaryContainer = Color(0xFF004D39),
-    outline = Color(0xFF73857B),
-    outlineVariant = Color(0xFFD5E0D8),
-    secondary = TealSecondaryLight,
-    secondaryContainer = Color(0xFFDDEFEA),
-    onSecondaryContainer = Color(0xFF164C46),
-    tertiary = Color(0xFF866019),
-    background = BackgroundLight,
-    surface = SurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
+    primary = BrandPrimaryLight,
     onPrimary = Color.White,
+    primaryContainer = BrandPrimaryContainerLight,
+    onPrimaryContainer = BrandOnPrimaryContainerLight,
+    secondary = BrandPrimaryLight,
     onSecondary = Color.White,
-    onBackground = TextPrimaryLight,
-    onSurface = TextPrimaryLight,
-    onSurfaceVariant = TextSecondaryLight,
+    secondaryContainer = Color(0xFFE4F4EC),
+    onSecondaryContainer = BrandOnPrimaryContainerLight,
+    tertiary = LedgerOnButterLight,
+    onTertiary = Color.White,
+    background = CanvasIvoryLight,
+    onBackground = TextInkPrimaryLight,
+    surface = SurfaceLedgerLight,
+    onSurface = TextInkPrimaryLight,
+    surfaceVariant = SurfaceVariantLedgerLight,
+    onSurfaceVariant = TextInkSecondaryLight,
+    outline = OutlineLedgerLight,
+    outlineVariant = OutlineVariantLedgerLight,
     error = ExpenseLight,
     onError = Color.White,
 )
 
 @Composable
 fun EasyCashTheme(
-    darkTheme: Boolean = true, // Default to Dark Premium mode per docs/UI_UX.md
+    darkTheme: Boolean = false, // Ivory Canvas Light is default per UI_LEDGER_DIRECTION.md
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
